@@ -1,23 +1,21 @@
-import os
+import pypandoc
 from setuptools import setup
 
 
-# Utility function to read the README file.
-# Used for the long_description.  It's nice, because now 1) we have a top level
-# README file and 2) it's easier to type in the README file than to put a raw
-# string in below ...
-def read(file_name):
-    return open(os.path.join(os.path.dirname(__file__), file_name)).read()
+try:
+    description=pypandoc.convert('README.md', 'rst')
+except (IOError, ImportError):
+    description=open('README.md').read()
 
 
-version = '0.3'
+version = '0.4'
 
 setup(
     name='insta_browser',
     packages=['insta_browser'],
     version=version,
     description='easy parsing/automation instagram.com',
-    long_description=read('README.md'),
+    long_description=description,
     author='Aleksej Krichevsky',
     author_email='krich.al.vl@gmail.com',
     url='https://github.com/aLkRicha/insta_browser',
