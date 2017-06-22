@@ -21,7 +21,7 @@ setup(
     author='Aleksej Krichevsky',
     author_email='krich.al.vl@gmail.com',
     url='https://github.com/aLkRicha/insta_browser',
-    download_url='https://github.com/aLkRicha/insta_browser/archive{}.tar.gz'.format(version),
+    download_url='https://github.com/aLkRicha/insta_browser/archive/{}.tar.gz'.format(version),
     keywords=['parsing', 'bot', 'instabot', 'automation', 'likes'],
     license='MIT',
     classifiers=[ # look here https://pypi.python.org/pypi?%3Aaction=list_classifiers
