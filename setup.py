@@ -1,9 +1,9 @@
-import pypandoc
 from setuptools import setup
 
 
 try:
-    description=pypandoc.convert('README.md', 'rst')
+    import pypandoc
+    description=pypandoc.convert(source='README.md',format='markdown_github',to='rst',outputfile='README.rst')
 except (IOError, ImportError):
     description=open('README.md').read()
 
