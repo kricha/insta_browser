@@ -1,11 +1,13 @@
+# -*- coding: utf-8 -*-
 from selenium import webdriver
 import pickle
 import time
+import random
 
 
 class Browser:
 
-    def __init__(self, debug=False, chrome=False):
+    def __init__(self, debug=False, chrome=False, cookie_path = '/tmp'):
         if chrome:
             self.chrome = chrome
             self.browser = webdriver.Chrome()
@@ -19,12 +21,14 @@ class Browser:
             for key, value in headers.items():
                 webdriver.DesiredCapabilities.PHANTOMJS['phantomjs.page.customHeaders.{}'.format(key)] = value
             webdriver.DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = headers.get('User-Agent')
-
             self.browser = webdriver.PhantomJS()
             self.browser.command_executor._commands['executePhantomScript']=('POST', '/session/$sessionId/phantom/execute')
             self.resource_requested_logic()
-        self.mouse = webdriver.ActionChains(self.browser)
         self.debug = debug
+        self.cookie_path = cookie_path
+        self.liked = 0
+        self.skipped = 0
+        self.feed_scrolled_down = 0
 
     def clear_driver_cache(self):
         self.browser.execute('executePhantomScript', {'script': '''
@@ -52,7 +56,7 @@ class Browser:
         time.sleep(2)
         try:
             self.log('try to auth with cookies')
-            cookies = pickle.load(open('var/cookies/{}.pkl'.format(login), "rb"))
+            cookies = pickle.load(open('{}/{}.pkl'.format(self.cookie_path, login), "rb"))
             for cookie in cookies:
                 br.add_cookie(cookie)
 
@@ -70,7 +74,7 @@ class Browser:
             self.log(u'Form submit')
             submit.submit()
             time.sleep(3)
-            pickle.dump([br.get_cookie('sessionid')], open('var/cookies/{}.pkl'.format(login), "wb"))
+            pickle.dump([br.get_cookie('sessionid')], open('{}/{}.pkl'.format(self.cookie_path, login), "wb"))
             self.log('auth complete')
         br.refresh()
 
@@ -88,7 +92,7 @@ class Browser:
 
     def is_last_post_in_feed_not_liked(self):
         try:
-            self.browser.find_element_by_css_selector('article:last-child .coreSpriteLikeHeartOpen')
+            self.browser.find_element_by_css_selector('article:last-child .coreSpriteHeartOpen')
             return True
         except:
             return False
@@ -97,21 +101,29 @@ class Browser:
         while self.is_last_post_in_feed_not_liked():
             self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(1)
-            self.log('scroll down')
+            self.feed_scrolled_down+=1
 
     def like_found_posts(self):
         br = self.browser
         articles = br.find_elements_by_tag_name('article')
         for post in articles:
-            self.mouse.move_to_element(post).perform()
-            time.sleep(1)
+            sec = random.randint(1, 15)/float(10)
+            time.sleep(sec)
+            mouse = webdriver.ActionChains(br).move_to_element(post)
             heart = post.find_element_by_css_selector('div:nth-child(3) section a:first-child')
-            if 'coreSpriteLikeHeartOpen' in heart.find_element_by_css_selector('span').get_attribute("class"):
-                self.log('need to be liked ♥️')
-                self.mouse.move_to_element(heart).perform()
+            if 'coreSpriteHeartOpen' in heart.find_element_by_css_selector('span').get_attribute("class"):
+                author = post.find_element_by_css_selector('div:first-child .notranslate').text
+                postLink = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(4) a').get_attribute('href')
+                self.log('\t♥️  @{} post {}'.format(author, postLink))
+                mouse.move_to_element(heart).perform()
                 heart.click()
+                self.liked+=1
             else:
-                self.log('no need to be liked 🍔')
+                self.skipped+=1
+
+    def get_summury(self):
+        return 'Feed scrolled down {} times, liked {} posts, skipped {} posts'.format(self.feed_scrolled_down, self.liked, self.skipped);
+
 
     def log(self, text):
         if self.debug:

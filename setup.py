@@ -10,7 +10,7 @@ def read(file_name):
     return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
 
-version = '0.2'
+version = '0.3'
 
 setup(
     name='insta_browser',
