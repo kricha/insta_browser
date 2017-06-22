@@ -114,8 +114,9 @@ class Browser:
             mouse = webdriver.ActionChains(br).move_to_element(post)
             heart = post.find_element_by_css_selector('div:nth-child(3) section a:first-child')
             author = post.find_element_by_css_selector('div:first-child .notranslate').text
-            if 'coreSpriteHeartOpen' in heart.find_element_by_css_selector('span').get_attribute("class") or author != self.login:
-                post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(4) a').get_attribute('href')
+            heart_classes = heart.find_element_by_css_selector('span').get_attribute("class")
+            if 'coreSpriteHeartOpen' in heart_classes and author != self.login:
+                post_link = self.get_feed_post_link(post)
                 self.log('\t♥️  @{} post {}'.format(author, post_link))
                 mouse.move_to_element(heart).perform()
                 heart.click()
@@ -124,7 +125,15 @@ class Browser:
                 self.skipped += 1
 
     def get_summary(self):
-        return 'Feed scrolled down {} times, liked {} posts, skipped {} posts'.format(self.feed_scrolled_down, self.liked, self.skipped)
+        return 'Feed scrolled down {} times, liked {} posts, skipped {} posts'.\
+            format(self.feed_scrolled_down, self.liked, self.skipped)
+
+    def get_feed_post_link(self, post):
+        try:
+            post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(4) a')
+        except:
+            post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(3) a')
+        return post_link.get_attribute('href')
 
     def log(self, text):
         if self.debug:
