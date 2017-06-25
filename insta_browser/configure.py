@@ -5,8 +5,8 @@ def set_headers(driver):
         'Accept': '*/*',
         'Accept-Language': 'en-US,en;q=0.8',
         'Cache-Control': 'max-age=0',
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26'
-                      ' (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                      ' (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
     }
     for key, value in headers.items():
         driver.DesiredCapabilities.PHANTOMJS['phantomjs.page.customHeaders.{}'.format(key)] = value
