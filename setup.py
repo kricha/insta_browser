@@ -3,12 +3,12 @@ from setuptools import setup
 
 try:
     import pypandoc
-    description=pypandoc.convert(source='README.md', format='markdown_github', to='rst', outputfile='README.rst')
+    description = pypandoc.convert(source='README.md', format='markdown_github', to='rst', outputfile='README.rst')
 except (IOError, ImportError):
-    description=open('README.md').read()
+    description = open('README.md').read()
 
 
-version = '0.4.1'
+version = '0.4.5'
 
 setup(
     name='insta_browser',
