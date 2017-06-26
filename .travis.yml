@@ -1,0 +1,16 @@
+language: python
+python:
+  - "2.7"
+  - "3.6"
+branches:
+  only:
+    - master
+- provider: pypi
+    distributions: sdist bdist_wheel
+    server: https://testpypi.python.org/pypi
+    user: "al_kricha"
+    password:
+      secure: "soE9vc0MUomCgHL+OjCSnPaCB8XxqY23B2UzC3y+PEdNtMYUfOM1yHmV9eB3jIQpk98ylvqAflcwfsWVDNoGdq7NK55NuVmpcsl5TXgpIw4xsCKPYwHKpKh8marAmTxcVPieilYi5Bbi+3bPOxBdiz+Mashjr1ockbqCphYdwmtKKiTieOIW0v5jaWxGCLg7p0xDdkFmR/OtKfMEE4slva6czZryTpYbGdLJmHBPnKj/z0hnhyCaWQijW4cIn/7Q2SeGQsZUDz5aKc2p9oaiIVMsGKGCQ0nZ2n7SPL03Hk8p2rT+CKGI5LZhyU2YqqzdRZKg1UTvQkEScM5mtsOJu5TYdDNK0UwZ6ldVgnKe/cbT5f9veavoIJsaUC2pDttwWw4SoPWAr3nVTHyTjVvEX1uLGcXPJzWjGwjnYOc8bPmnGHISzN3YKDL/zYRoWAodYnJjlGdfgKb3DuTNckLsubBFtV+eFjGOhVvNv24xVI0/vLKxQ7pCAIObLFxp1GgpiiXUuraxGQtv3z2CVwjWWxu9JUqLrPmH+eA6JYDDi+3XKyVUpTTCg94jjhz6F3kBy4RF0bizsO7s15pfy7ky/ECKAzTJj8g+wNKSDsb7qi3KXVnwOi8KwPqgpVcXBTCjEYLJkk5Rc1bowVeu+xUm4+1WLkpilN9xOuecselyIMI="
+    on:
+      branch: master
+      tags: false
