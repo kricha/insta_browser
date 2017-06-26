@@ -1,5 +1,3 @@
-
-
 def set_headers(driver):
     headers = {
         'Accept': '*/*',
@@ -12,6 +10,7 @@ def set_headers(driver):
         driver.DesiredCapabilities.PHANTOMJS['phantomjs.page.customHeaders.{}'.format(key)] = value
     driver.DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = headers.get('User-Agent')
     browser = driver.PhantomJS()
+    browser.set_window_size(500,1000)
     return browser
 
 

@@ -3,6 +3,9 @@ Instabrowser
 
 |Build Status| |PyPI| |Code Climate|
 
+👍 ♥️ 🏆 Library for instagram.com automation. Like instagram feed (whole
+or by count), like username profile (whole or by count).
+
 You need to have PhantomJS or Chrome web driver for work.
 
 Download and place binary from archive to bin folder: -
@@ -10,7 +13,7 @@ Download and place binary from archive to bin folder: -
 `Chrome <https://sites.google.com/a/chromium.org/chromedriver/downloads>`__
 
 Example of using package:
-`**insta\_bot** <https://github.com/aLkRicha/insta_bot>`__
+**`insta\_bot <https://github.com/aLkRicha/insta_bot>`__**
 
 .. |Build Status| image:: https://travis-ci.org/aLkRicha/insta_browser.svg?branch=master
    :target: https://travis-ci.org/aLkRicha/insta_browser

@@ -7,8 +7,7 @@ try:
 except (IOError, ImportError):
     description = open('README.md').read()
 
-
-version = '0.4.6.6'
+version = '0.5'
 
 setup(
     name='insta_browser',
@@ -33,6 +32,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Browsers',
     ],
     install_requires=[
-        'selenium'
+        'selenium',
+        'tqdm'
     ],
 )

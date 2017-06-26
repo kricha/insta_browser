@@ -5,9 +5,19 @@ import random
 from .logger import Logger
 from .configure import *
 from .auth import *
+from .insta_not_feed_util import *
+import re
 
 
 class Browser:
+
+    login = ''
+    liked = 0
+    skipped = 0
+    feed_scrolled_down = 0
+    skipped_excluded = 0
+    feed_posts_per_page = 12
+    posts_count_to_like = None
 
     def __init__(self, debug=False, chrome=False, cookie_path=None, screen_shot_path=None, logger_file=None, exclude=None):
         if chrome:
@@ -21,22 +31,6 @@ class Browser:
         self.exclude = exclude or []
         self.chrome = chrome
         self.logger = Logger(logger_file, screen_shot_path, debug)
-        self.__setup_initial_props()
-
-    def __setup_initial_props(self):
-        """
-        Setup initial properties
-        :return: Browser
-        """
-        self.login = ''
-        self.liked = 0
-        self.skipped = 0
-        self.feed_scrolled_down = 0
-        self.skipped_excluded = 0
-        self.feed_posts_per_page = 12
-        self.posts_count_to_like = None
-
-        return self
 
     def auth(self, login, password):
         br = self.browser
@@ -89,7 +83,7 @@ class Browser:
             webdriver.ActionChains(br).move_to_element(post['heart']).perform()
             post['heart'].click()
             self.liked += 1
-            self.logger.log('\t♥ @{} post {}'.format(post['author'], post['link']))
+            self.logger.log('\t♥️  @{} post {}'.format(post['author'], post['link']))
             time.sleep(random.randint(1, 10)/float(10))
 
     def preprocess_posts_from_feed(self, posts):
@@ -115,10 +109,13 @@ class Browser:
         return posts_to_perform
 
     def get_summary(self):
-        return 'Feed scrolled down {} times, liked {} posts, skipped {} posts, skipped excluded {} posts'.\
+        log = 'Feed scrolled down {} times, liked {} posts, skipped {} posts, skipped excluded {} posts'.\
             format(self.feed_scrolled_down, self.liked, self.skipped, self.skipped_excluded)
+        self.logger.log_to_file(log)
+        return log
 
-    def get_feed_post_link(self, post):
+    @staticmethod
+    def get_feed_post_link(post):
         """
         Get link to post from post web-element from feed
         :param post:
@@ -129,3 +126,16 @@ class Browser:
         except:
             post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(3) a')
         return post_link.get_attribute('href')
+
+    def like_user(self, username, count=None):
+        br = self.browser
+        br.get("https://www.instagram.com/{}".format(username))
+        if count:
+            posts_count = count
+        else:
+            posts_from_page = br.find_element_by_css_selector("article header ul li span").text
+            posts_count = int(re.match('\d+', posts_from_page).group(0))
+        self.logger.log("Start liking @{} profile {} posts".format(username, posts_count))
+        result = like_posts(br, self.logger, posts_count)
+        self.liked = result['liked']
+        self.skipped = result['skipped']
