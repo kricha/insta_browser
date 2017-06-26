@@ -1,11 +1,11 @@
 language: python
 python:
-  - "2.7"
-  - "3.6"
-branches:
-  only:
-    - master
-- provider: pypi
+    - "2.7"
+    - "3.6"
+
+deploy:
+    # test pypi
+  - provider: pypi
     distributions: sdist bdist_wheel
     server: https://testpypi.python.org/pypi
     user: "al_kricha"
@@ -14,3 +14,13 @@ branches:
     on:
       branch: master
       tags: false
+
+    # production pypi
+  - provider: pypi
+    distributions: sdist bdist_wheel
+    user: "al_kricha"
+    password:
+      secure: "edny7dWsjPjnpRimULoFeallQXIowoEoIhw1QpbaK42yPg6AXBSfCrSHQolZrOHeqr4zSqcOmOHX+k2s4u3l1crAsZdo+DCdUuXMAfOKWGlRdslL6KXooYVdOTG7B3I50gu4WiYI8/fif0JdBTHOxHc5s3kY15exeRFLXeQhDeEaYt+CR3HO73kc0eE3rkIgL6gzmckLcFxoAciRlub6uZXonMzrAil9aXJ1C/qFHPWmy+NSKdgWOQAswjO/ojucHyRqBWbFNUK3UTOfrECEMdrv2j8bdbQberbP0yUF0Wg+xuCvYk8nE8uUf8Rj/VsizTrZ+jf1mVMcY7sBhqA0AW5I/3tpSAYkRjMk9CI3uoBdS852pAQo1sPo0arBC4n+af/w7gKYMVlDvLAgSEEDOdG2h/baud9EyjuIusNR2HNammwUIw2jorL3iuRN0m9tEqprgZX6lX1SZ6lEOuTNDJ5V5pEfBGS8EPbbdy0cpnGnGrrcRgL+It4YmxBoEpoiko/y5o6moX2bHASQtcib9RugF0ZheyH266ZzU9DIu6ilpxgq9jaILtDmFfiCUGkIsZ0QcwRgxOM8uezaIn7Cvp87dfHAwRiVH0EXNdsutITQsz/BfZEX6ARTWONQEciM/hidnl7CeDsDgWBV3/Ih1LnRT5qmg8C6L0deOMOw+5Q="
+    on:
+      branch: master
+      tags: true
