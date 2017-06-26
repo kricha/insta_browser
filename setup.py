@@ -8,7 +8,7 @@ except (IOError, ImportError):
     description = open('README.md').read()
 
 
-version = '0.4.6.1'
+version = '0.4.6.3'
 
 setup(
     name='insta_browser',
@@ -17,6 +17,7 @@ setup(
     description='easy parsing/automation instagram.com',
     long_description=description,
     author='Aleksej Krichevsky',
+    #platfor='any',
     author_email='krich.al.vl@gmail.com',
     url='https://github.com/aLkRicha/insta_browser',
     download_url='https://github.com/aLkRicha/insta_browser/archive/{}.tar.gz'.format(version),
