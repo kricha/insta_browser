@@ -3,7 +3,7 @@ python:
     - "2.7"
     - "3.6"
 before_install:
-  - apt install pandoc
+  - apt-get install pandoc
 deploy:
     # test pypi
   - provider: pypi
