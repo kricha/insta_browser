@@ -1,4 +1,5 @@
 # Instabrowser
+[![Build Status](https://travis-ci.org/aLkRicha/insta_browser.svg?branch=master)](https://travis-ci.org/aLkRicha/insta_browser)
 
 You need to have PhantomJS or Chrome web driver for work.
 

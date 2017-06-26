@@ -8,7 +8,7 @@ except (IOError, ImportError):
     description = open('README.md').read()
 
 
-version = '0.4.6'
+version = '0.4.6.1'
 
 setup(
     name='insta_browser',

@@ -89,7 +89,7 @@ class Browser:
             webdriver.ActionChains(br).move_to_element(post['heart']).perform()
             post['heart'].click()
             self.liked += 1
-            self.logger.log('\t♥️   @{} post {}'.format(post['author'], post['link']))
+            self.logger.log('\t♥ @{} post {}'.format(post['author'], post['link']))
             time.sleep(random.randint(1, 10)/float(10))
 
     def preprocess_posts_from_feed(self, posts):
