@@ -3,12 +3,12 @@ from setuptools import setup
 
 try:
     import pypandoc
-    description = pypandoc.convert(source='README.md', format='markdown', to='rst', outputfile='README.rst')
+    description = open('README.rst').read()
 except (IOError, ImportError):
     description = open('README.md').read()
 
 
-version = '0.4.6.4'
+version = '0.4.6.5'
 
 setup(
     name='insta_browser',
@@ -17,13 +17,13 @@ setup(
     description='easy parsing/automation instagram.com',
     long_description=description,
     author='Aleksej Krichevsky',
-    #platfor='any',
+    platfor='any',
     author_email='krich.al.vl@gmail.com',
     url='https://github.com/aLkRicha/insta_browser',
     download_url='https://github.com/aLkRicha/insta_browser/archive/{}.tar.gz'.format(version),
     keywords=['parsing', 'bot', 'instabot', 'automation', 'likes'],
     license='MIT',
-    classifiers=[ # look here https://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=[  # look here https://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
