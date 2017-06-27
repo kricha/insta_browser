@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
+import selenium.common.exceptions as excp
 import time
-import random
 from .logger import Logger
 from .configure import *
 from .auth import *
@@ -10,7 +10,6 @@ import re
 
 
 class Browser:
-
     login = ''
     liked = 0
     skipped = 0
@@ -18,8 +17,10 @@ class Browser:
     skipped_excluded = 0
     feed_posts_per_page = 12
     posts_count_to_like = None
+    like_limit = 500
 
-    def __init__(self, debug=False, chrome=False, cookie_path=None, screen_shot_path=None, logger_file=None, exclude=None):
+    def __init__(self, debug=False, chrome=False, cookie_path=None, screen_shot_path=None, logger_file=None,
+                 exclude=None):
         if chrome:
             self.browser = webdriver.Chrome()
         else:
@@ -56,7 +57,7 @@ class Browser:
         try:
             self.browser.find_element_by_css_selector('article:last-child .coreSpriteHeartOpen')
             return True
-        except:
+        except excp.InvalidSelectorException:
             return False
 
     def scroll_feed_to_last_not_liked_posts(self):
@@ -67,7 +68,7 @@ class Browser:
 
     def scroll_feed_by_posts_count(self, posts_count):
         self.posts_count_to_like = posts_count
-        times_to_scroll = posts_count/12
+        times_to_scroll = posts_count / 12
         while times_to_scroll > 0:
             self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(1)
@@ -80,11 +81,10 @@ class Browser:
         posts = self.preprocess_posts_from_feed(articles)
         del articles
         for post in posts:
-            webdriver.ActionChains(br).move_to_element(post['heart']).perform()
-            post['heart'].click()
+            webdriver.ActionChains(br).move_to_element(post['heart']).click().perform()
+            time.sleep(.5)
             self.liked += 1
             self.logger.log('\t♥️  @{} post {}'.format(post['author'], post['link']))
-            time.sleep(random.randint(1, 10)/float(10))
 
     def preprocess_posts_from_feed(self, posts):
         posts_to_perform = []
@@ -109,7 +109,7 @@ class Browser:
         return posts_to_perform
 
     def get_summary(self):
-        log = 'Feed scrolled down {} times, liked {} posts, skipped {} posts, skipped excluded {} posts'.\
+        log = 'Feed scrolled down {} times, liked {} posts, skipped {} posts, skipped excluded {} posts'. \
             format(self.feed_scrolled_down, self.liked, self.skipped, self.skipped_excluded)
         self.logger.log_to_file(log)
         return log
@@ -127,15 +127,34 @@ class Browser:
             post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(3) a')
         return post_link.get_attribute('href')
 
-    def like_user(self, username, count=None):
+    def process_user(self, username, count=None):
         br = self.browser
         br.get("https://www.instagram.com/{}".format(username))
+        time.sleep(.5)
         if count:
             posts_count = count
         else:
             posts_from_page = br.find_element_by_css_selector("article header ul li span").text
-            posts_count = int(re.match('\d+', posts_from_page).group(0))
+            tmp_count = int(re.match('\d+', posts_from_page).group(0))
+            posts_count = self.like_limit if tmp_count > self.like_limit else tmp_count
         self.logger.log("Start liking @{} profile {} posts".format(username, posts_count))
-        result = like_posts(br, self.logger, posts_count)
+        processor = NotFeedProcessor(br, self.logger)
+        result = processor.like_user_profile(posts_count)
+        self.liked = result['liked']
+        self.skipped = result['skipped']
+
+    def process_location(self, location, count=None):
+        br = self.browser
+        processed_location = re.sub('^(/?explore/locations/|/|/?locations/)', '', location)
+        br.get("https://www.instagram.com/explore/locations/{}".format(processed_location))
+        time.sleep(.5)
+        if count:
+            posts_count = self.like_limit - 9 if count > self.like_limit else count
+        else:
+            posts_count = self.like_limit - 9
+        self.logger.log("Start liking top posts from {} location".format(processed_location))
+        processor = NotFeedProcessor(br, self.logger)
+        processor.like_top()
+        result = processor.like_latest(posts_count)
         self.liked = result['liked']
         self.skipped = result['skipped']
