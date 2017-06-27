@@ -57,7 +57,7 @@ class Browser:
         try:
             self.browser.find_element_by_css_selector('article:last-child .coreSpriteHeartOpen')
             return True
-        except excp.InvalidSelectorException:
+        except excp.NoSuchElementException:
             return False
 
     def scroll_feed_to_last_not_liked_posts(self):
