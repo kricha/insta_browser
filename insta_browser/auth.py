@@ -1,5 +1,6 @@
 import pickle
 import time
+import selenium.common.exceptions as excp
 
 
 def auth_with_cookies(browser, logger, login, cookie_path='/tmp'):
@@ -55,5 +56,5 @@ def check_if_user_authenticated(browser):
     try:
         browser.find_element_by_css_selector(".coreSpriteDesktopNavProfile")
         return True
-    except:
+    except excp.NoSuchElementException:
         return False

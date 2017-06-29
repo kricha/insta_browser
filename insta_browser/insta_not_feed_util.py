@@ -1,6 +1,7 @@
 import tqdm
 import time
 from selenium.webdriver.common.action_chains import ActionChains
+import selenium.common.exceptions as excp
 
 TOP_POSTS_XPATH = '//*[@id="react-root"]/section/main/article/div[1]/div'
 LATEST_POSTS_XPATH = '//*[@id="react-root"]/section/main/article/div[2]'
@@ -9,6 +10,10 @@ LATEST_POSTS_XPATH = '//*[@id="react-root"]/section/main/article/div[2]'
 class NotFeedProcessor:
     liked = 0
     skipped = 0
+    progress = None
+    heart = None
+    already_liked = 0
+    count = 0
 
     def __init__(self, browser, logger):
         self.browser = browser
@@ -32,29 +37,42 @@ class NotFeedProcessor:
         return self.__return_liking_summary()
 
     def go_through_posts(self, count):
+        self.count = count
         time.sleep(.5)
-        already_liked = 0
-        progress = tqdm.tqdm(range(count))
+        self.already_liked = 0
+        progress = tqdm.tqdm(range(self.count))
         for i in progress:
             time.sleep(1)
-            heart = self.__is_liked_acc_post()
-            if heart:
-                heart.click()
-                self.logger.log_to_file("--> like post #{}".format(i))
-                self.liked += 1
-                already_liked = 0
-                time.sleep(0.5)
-            else:
-                if count > 9:
-                    already_liked += 1
-                self.skipped += 1
-
-            link = self.__has_next()
-            if not link or already_liked > 5:
+            self.__like_post()
+            if not self.__go_to_next_post():
                 progress.close()
                 break
-            link.click()
             progress.update()
+
+    def __like_post(self):
+        if self.__is_not_liked_acc_post():
+            self.heart.click()
+            self.logger.log_to_file("--> like post")
+            self.liked += 1
+            self.already_liked = 0
+            time.sleep(0.5)
+        elif not self.heart and self.count > 9:
+            self.already_liked += 1
+            self.skipped +=1
+        else:
+            self.skipped += 1
+
+    def __go_to_next_post(self):
+        """
+        Go to next post on non-feed page
+        :return:
+        """
+        link = self.__has_next()
+        if not link or self.already_liked > 5:
+            return False
+        else:
+            link.click()
+            return True
 
     def __return_liking_summary(self):
         return {'liked': self.liked, 'skipped': self.skipped}
@@ -64,16 +82,17 @@ class NotFeedProcessor:
         post_link = top_block.find_element_by_css_selector("a")
         ActionChains(self.browser).move_to_element(post_link).click().perform()
 
-    def __is_liked_acc_post(self):
+    def __is_not_liked_acc_post(self):
         """
         Check if not feed post is liked
         :return: like WebElement if exist or False if not
         """
+        self.heart = None
         try:
             is_not_liked_span = self.browser.find_element_by_css_selector(".coreSpriteHeartOpen")
-            heart = is_not_liked_span.find_element_by_xpath('..')
-            return heart
-        except:
+            self.heart = is_not_liked_span.find_element_by_xpath('..')
+            return True
+        except excp.NoSuchElementException:
             return False
 
     def __has_next(self):
@@ -84,5 +103,5 @@ class NotFeedProcessor:
         try:
             next_link = self.browser.find_element_by_css_selector(".coreSpriteRightPaginationArrow")
             return next_link
-        except:
+        except excp.NoSuchElementException:
             return False

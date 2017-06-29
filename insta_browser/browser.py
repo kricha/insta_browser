@@ -123,7 +123,7 @@ class Browser:
         """
         try:
             post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(4) a')
-        except:
+        except excp.NoSuchElementException:
             post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(3) a')
         return post_link.get_attribute('href')
 
@@ -148,13 +148,28 @@ class Browser:
         processed_location = re.sub('^(/?explore/locations/|/|/?locations/)', '', location)
         br.get("https://www.instagram.com/explore/locations/{}".format(processed_location))
         time.sleep(.5)
-        if count:
-            posts_count = self.like_limit - 9 if count > self.like_limit else count
-        else:
-            posts_count = self.like_limit - 9
+        posts_count = self.__get_posts_count(count)
         self.logger.log("Start liking top posts from {} location".format(processed_location))
         processor = NotFeedProcessor(br, self.logger)
         processor.like_top()
         result = processor.like_latest(posts_count)
         self.liked = result['liked']
         self.skipped = result['skipped']
+
+    def process_tag(self, tag, count=None):
+        br = self.browser
+        br.get("https://www.instagram.com/explore/tags/{}".format(tag))
+        time.sleep(.5)
+        posts_count = self.__get_posts_count(count)
+        self.logger.log("Start liking top posts from {} location".format(tag))
+        processor = NotFeedProcessor(br, self.logger)
+        processor.like_top()
+        result = processor.like_latest(posts_count)
+        self.liked = result['liked']
+        self.skipped = result['skipped']
+
+    def __get_posts_count(self, count):
+        if count:
+            return self.like_limit - 9 if count > self.like_limit else count
+        else:
+            return self.like_limit - 9
