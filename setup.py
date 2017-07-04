@@ -6,11 +6,11 @@ try:
 except (IOError, ImportError):
     description = open('README.md').read()
 
-version = '0.7'
+version = '0.7.1'
 
 setup(
     name='insta_browser',
-    packages=['insta_browser'],
+    packages=['insta_browser', 'insta_browser/base'],
     version=version,
     description='easy parsing/automation instagram.com',
     long_description=description,
