@@ -3,3 +3,4 @@ twine
 selenium
 wheel
 tqdm
+sphinx
