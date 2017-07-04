@@ -18,6 +18,7 @@ class FeedProcessor(BaseProcessor):
 
         :return:
         """
+        self.logger.log('Start scrolling page.')
         while self.__is_last_post_in_feed_not_liked():
             self.__scroll_down()
 
@@ -29,7 +30,7 @@ class FeedProcessor(BaseProcessor):
         """
         footer = self.browser.find_element_by_tag_name('footer')
         ActionChains(self.browser).move_to_element(footer).perform()
-        self.logger.log_to_file('Scrolled down.')
+        self.logger.log_to_file('---> scrolled down.')
         self.feed_scrolled_down += 1
         time.sleep(1)
 
@@ -63,14 +64,17 @@ class FeedProcessor(BaseProcessor):
         posts = br.find_elements_by_tag_name('article')
         analyzed_posts = self.pre_process_posts(posts, exclude, login)
         self.logger.log('Start liking posts.')
-        print(analyzed_posts)
         progress = tqdm.tqdm(analyzed_posts)
         for post in progress:
-            ActionChains(br).move_to_element(post.get("heart"))
-            log = "---> liked @{} post {}".format(post.get('author'), post.get('link'))
+            post_element = post.get('post')
+            heart = post.get('heart')
+            ActionChains(br).move_to_element(post_element).perform()
+            time.sleep(.3)
+            heart.click()
+            time.sleep(.7)
+            log = '---> liked @{} post {}'.format(post.get('author'), post.get('link'))
             self.post_liked += 1
             self.logger.log_to_file(log)
-            time.sleep(.5)
 
     def pre_process_posts(self, posts, exclude, login):
         """
@@ -93,56 +97,19 @@ class FeedProcessor(BaseProcessor):
             post = posts.pop()
             heart = post.find_element_by_css_selector('div:nth-child(3) section a:first-child')
             author = post.find_element_by_css_selector('div:first-child .notranslate').text
-            heart_classes = heart.find_element_by_css_selector('span').get_attribute("class")
+            heart_classes = heart.find_element_by_css_selector('span').get_attribute('class')
 
             is_not_liked = 'coreSpriteHeartOpen' in heart_classes
             is_mine = author == login
             need_to_exclude = author in exclude
 
-            if is_not_liked and is_mine:
+            if is_mine or not is_not_liked:
                 self.post_skipped += 1
-            elif is_not_liked and need_to_exclude:
+            elif need_to_exclude:
                 self.post_skipped_excluded += 1
             else:
-                post_link = self.__get_feed_post_link(post)
-                tmp_post = {"heart": heart, "author": author, "link": post_link}
-                result_posts.append(tmp_post)
+                post_link = self._get_feed_post_link(post)
+                result_posts.append({'post': post,'heart': heart, 'author': author, 'link': post_link})
 
             pr.update()
         return result_posts
-
-    @staticmethod
-    def __get_feed_post_link(post):
-        """
-        Get link to post from post web-element from feed
-
-        :param post:
-        :return:
-        """
-        try:
-            post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(4) a')
-        except excp.NoSuchElementException:
-            post_link = post.find_element_by_css_selector('div:nth-child(3) div:nth-child(3) a')
-        return post_link.get_attribute('href')
-
-    @staticmethod
-    def __get_feed_post_media(post):  # TODO: refactor searching image
-        """
-        Get link to post from post web-element from feed
-
-        :param post:
-        :return:
-        """
-        try:
-            image = post.find_element_by_css_selector('div:nth-child(2) img')
-            return image.get_attribute('src')
-        except excp.NoSuchElementException:
-            pass
-
-        try:
-            video = post.find_element_by_tag_name('video')
-            return video.get_attribute('src')
-        except excp.NoSuchElementException:
-            pass
-
-        return False
