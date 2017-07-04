@@ -15,8 +15,8 @@ class Logger:
     def log_to_file(self, text):
         file = open(self.log_file, 'a')
         log_date = datetime.now()
-        log_date.__format__("%d-%m-%Y %H:%M")
-        file.write("[{}] {}\n".format(log_date, text))
+        formatted_date = log_date.__format__("%d-%m-%Y %H:%M:%S")
+        file.write("[{}] {}\n".format(formatted_date, text))
 
     def save_screen_shot(self, browser, screen_shot_name=None):
         """
