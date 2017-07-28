@@ -42,7 +42,7 @@ def auth_with_credentials(browser, logger, login, password, cookie_path='/tmp'):
     submit = browser.find_element_by_css_selector("form button")
     logger.log("\tAuthWithCreds: submitting login form.")
     submit.submit()
-    time.sleep(1)
+    time.sleep(3)
     logger.log("\tAuthWithCreds: saving cookies.")
     pickle.dump([browser.get_cookie('sessionid')], open('{}/{}.pkl'.format(cookie_path, login), "wb"))
     if check_if_user_authenticated(browser):

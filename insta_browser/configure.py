@@ -1,18 +1,19 @@
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 def set_headers(driver):
+    ua = 'Opera/9.80 (Windows NT 6.1; WOW64; U; en) Presto/2.10.229 Version/11.62'
     headers = {
-        'Accept': '*/*',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.8',
-        'Cache-Control': 'max-age=0',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                      ' (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+        'Cache-Control': 'max-age=0'
     }
+    d_caps = DesiredCapabilities.PHANTOMJS
     for key, value in headers.items():
-        driver.DesiredCapabilities.PHANTOMJS['phantomjs.page.customHeaders.{}'.format(key)] = value
-    browser = driver.PhantomJS()
-    driver.DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = headers.get('User-Agent')
-    browser.set_window_size(800, 600)
+        d_caps['phantomjs.page.customHeaders.{}'.format(key)] = value
+        d_caps['phantomjs.page.settings.userAgent'] = ua
+    browser = driver.PhantomJS(desired_capabilities=d_caps)
+    browser.set_window_size(1000, 700)
     return browser
 
 
