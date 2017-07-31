@@ -1,0 +1,2 @@
+include *.sql
+recursive-include insta_browser/ *.py *.sql

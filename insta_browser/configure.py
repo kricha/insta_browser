@@ -8,12 +8,12 @@ def set_headers(driver):
         'Accept-Language': 'en-US,en;q=0.8',
         'Cache-Control': 'max-age=0'
     }
-    d_caps = DesiredCapabilities.PHANTOMJS
+    caps = DesiredCapabilities.PHANTOMJS
     for key, value in headers.items():
-        d_caps['phantomjs.page.customHeaders.{}'.format(key)] = value
-        d_caps['phantomjs.page.settings.userAgent'] = ua
-    browser = driver.PhantomJS(desired_capabilities=d_caps)
-    browser.set_window_size(1000, 700)
+        caps['phantomjs.page.customHeaders.{}'.format(key)] = value
+    caps['phantomjs.page.settings.userAgent'] = ua
+    browser = driver.PhantomJS(desired_capabilities=caps)
+    browser.set_window_size(800, 600)
     return browser
 
 

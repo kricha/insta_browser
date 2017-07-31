@@ -1,4 +1,5 @@
 from setuptools import setup
+from insta_browser import version as v
 
 
 try:
@@ -6,16 +7,16 @@ try:
 except (IOError, ImportError):
     description = open('README.md').read()
 
-version = '0.7.2'
+version = v.__version__
 
 setup(
     name='insta_browser',
-    packages=['insta_browser', 'insta_browser/base'],
+    packages=['insta_browser'],
+    include_package_data=True,
     version=version,
     description='easy parsing/automation instagram.com',
     long_description=description,
     author='Aleksej Krichevsky',
-    platfor='any',
     author_email='krich.al.vl@gmail.com',
     url='https://github.com/aLkRicha/insta_browser',
     download_url='https://github.com/aLkRicha/insta_browser/archive/{}.tar.gz'.format(version),

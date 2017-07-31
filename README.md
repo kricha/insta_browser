@@ -11,4 +11,27 @@ Download and place binary from archive to bin folder:
 - [PhantomJS](http://phantomjs.org/download.html)
 - [Chrome](https://sites.google.com/a/chromium.org/chromedriver/downloads)
 
-Example of using package: [insta_bot](https://github.com/aLkRicha/insta_bot)
+Example of using package for liking specific user:
+```python
+import os
+from insta_browser import browser
+
+br = browser.Browser(
+    debug=True,
+    chrome=False,
+    cookie_path=os.path.join('var', 'cookies'),
+    log_path=os.path.join('var', 'logs'),
+    db_path=os.path.join('var', 'db'),
+    exclude=os.path.join('var', 'exclude.txt')
+)
+
+try:
+    br.auth('YOUR_INSTA_LOGIN', 'YOUR_INSTA_PASSWORD')
+    br.process_user('al_kricha')
+    print(br.get_summary())
+finally:
+    br.close_all()
+
+```
+
+Other examples can be seen in my repository: [insta_bot](https://github.com/aLkRicha/insta_bot)

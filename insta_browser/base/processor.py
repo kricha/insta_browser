@@ -1,4 +1,5 @@
 import selenium.common.exceptions as excp
+import pprint
 
 
 class BaseProcessor:
@@ -8,11 +9,17 @@ class BaseProcessor:
     post_already_liked = 0
     post_excluded = 0
     post_skipped = 0
-    like_limit = 500
+    like_limit = 416
     progress = None
     post_liked = 0
     heart = None
     count = 0
+    hour_like_limit = 150
+
+    def __init__(self, db, br, lg):
+        self.db = db
+        self.browser = br
+        self.logger = lg
 
     def get_summary(self):
         return {'liked': self.post_liked,
@@ -56,3 +63,19 @@ class BaseProcessor:
             pass
 
         return False
+
+    def get_like_limits(self, count=None):
+        limits = self.db.get_like_limits_by_account()
+        today_likes = limits[0]
+        hours_left = limits[1]
+        hour_likes_by_activity = (self.hour_like_limit*24 - today_likes) // hours_left
+        print(limits, hour_likes_by_activity)
+        ll = None
+        if self.hour_like_limit <= hour_likes_by_activity < self.hour_like_limit * 2:
+            ll = hour_likes_by_activity
+        elif hour_likes_by_activity >= self.hour_like_limit * 2:
+            ll = self.hour_like_limit * 2
+        elif hour_likes_by_activity < self.hour_like_limit:
+            ll = hour_likes_by_activity
+        self.count = count if 0 < count < ll else ll
+        return self.count

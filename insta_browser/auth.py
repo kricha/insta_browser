@@ -1,9 +1,11 @@
 import pickle
 import time
+import tempfile
+import os
 import selenium.common.exceptions as excp
 
 
-def auth_with_cookies(browser, logger, login, cookie_path='/tmp'):
+def auth_with_cookies(browser, logger, login, cookie_path=tempfile.gettempdir()):
     """
     Authenticate to instagram.com with cookies
     :param browser: WebDriver
@@ -15,7 +17,7 @@ def auth_with_cookies(browser, logger, login, cookie_path='/tmp'):
     logger.save_screen_shot(browser, 'login.png')
     try:
         logger.log('Trying to auth with cookies.')
-        cookies = pickle.load(open('{}/{}.pkl'.format(cookie_path, login), "rb"))
+        cookies = pickle.load(open(os.path.join(cookie_path, login+'.pkl'), "rb"))
         for cookie in cookies:
             browser.add_cookie(cookie)
         browser.refresh()
@@ -29,7 +31,7 @@ def auth_with_cookies(browser, logger, login, cookie_path='/tmp'):
     return False
 
 
-def auth_with_credentials(browser, logger, login, password, cookie_path='/tmp'):
+def auth_with_credentials(browser, logger, login, password, cookie_path=tempfile.gettempdir()):
     logger.log('Trying to auth with credentials.')
     login_field = browser.find_element_by_name("username")
     login_field.clear()
@@ -44,7 +46,7 @@ def auth_with_credentials(browser, logger, login, password, cookie_path='/tmp'):
     submit.submit()
     time.sleep(3)
     logger.log("\tAuthWithCreds: saving cookies.")
-    pickle.dump([browser.get_cookie('sessionid')], open('{}/{}.pkl'.format(cookie_path, login), "wb"))
+    pickle.dump([browser.get_cookie('sessionid')], open(os.path.join(cookie_path, login + '.pkl'), "wb"))
     if check_if_user_authenticated(browser):
         logger.log("Successful authorization with credentials.")
         return True

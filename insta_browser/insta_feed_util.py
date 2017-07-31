@@ -8,9 +8,6 @@ NOT_LIKED_CSS_CLASS = '.coreSpriteHeartOpen'
 
 
 class FeedProcessor(BaseProcessor):
-    def __init__(self, browser, logger):
-        self.browser = browser
-        self.logger = logger
 
     def scroll_feed_to_last_not_liked_posts(self):
         """
@@ -60,7 +57,7 @@ class FeedProcessor(BaseProcessor):
         :return:
         """
         br = self.browser
-        self.count = count
+        self.get_like_limits(count)
         posts = br.find_elements_by_tag_name('article')
         analyzed_posts = self.pre_process_posts(posts, exclude, login)
         self.logger.log('Start liking posts.')
@@ -73,6 +70,7 @@ class FeedProcessor(BaseProcessor):
             heart.click()
             time.sleep(.7)
             log = '---> liked @{} post {}'.format(post.get('author'), post.get('link'))
+            self.db.likes_increment()
             self.post_liked += 1
             self.logger.log_to_file(log)
 

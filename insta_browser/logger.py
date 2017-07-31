@@ -1,10 +1,13 @@
 from datetime import datetime
+from .version import __version__
+import tempfile
+import os
 
 
 class Logger:
-    def __init__(self, log_file='/tmp/insta_browser.txt', screen_shot_path='/tmp', debug=False):
-        self.log_file = log_file
-        self.screen_shot_path = screen_shot_path
+    def __init__(self, log_path=tempfile.gettempdir(), debug=False):
+        self.log_file = os.path.join(log_path, 'insta_browser_{}.log'.format(__version__))
+        self.screen_shot_path = os.path.join(log_path, 'screenshot')
         self.debug = debug
 
     def log(self, text, force=False):
@@ -27,8 +30,9 @@ class Logger:
         """
         if screen_shot_name:
             try:
-                browser.save_screenshot('{}/{}'.format(self.screen_shot_path, screen_shot_name))
-                self.log_to_file('Saving screen shot to {}/{}'.format(self.screen_shot_path, screen_shot_name))
+                screenshot_real_path = os.path.join(self.screen_shot_path, screen_shot_name)
+                browser.save_screenshot(screenshot_real_path)
+                self.log_to_file('Saving screen shot to {}'.format(screenshot_real_path))
                 return True
             except:
                 return False
