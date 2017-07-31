@@ -53,8 +53,11 @@ class BrowserDB:
     def detect_account(self, login):
         cur = self.db.cursor()
         if not self.get_account_id(login):
-            cur.execute('INSERT INTO accounts (username) VALUES (?)', [login])
+            q = 'INSERT INTO accounts (username) VALUES (?)'
+            p = [login]
+            cur.execute(q, p)
             self.db.commit()
+            self.db_log('query: {}, params: {}'.format(q, p))
             self.detect_account(login)
 
     def get_account_id(self, login):

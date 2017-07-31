@@ -30,6 +30,8 @@ class Browser:
         self.db = BrowserDB(self.logger, db_path)
 
     def auth(self, login, password):
+        if not login:
+            raise ValueError('Please provide login and password for Browser.auth method')
         self.db.detect_account(login)
         br = self.browser
         self.get("https://www.instagram.com/accounts/login/")
