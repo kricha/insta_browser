@@ -12,6 +12,10 @@ try:
 except ImportError:
     from urllib.parse import quote
 
+COUNTERS_KEY = 'acc'
+LIKES_COUNT_KEY = 'lc'
+COMMENTS_COUNT_KEY = 'cc'
+VIDEO_VIEWS_COUNT_KEY = 'vc'
 
 class InstaMeter:
     user = {}
@@ -33,7 +37,7 @@ class InstaMeter:
         try:
             self.__get_profile_first_posts()
         except ValueError as exc:
-            self.__error = exc.message
+            self.__error = "{}".format(exc)
             return self.__error
         self.__get_profile_rest_posts()
         self.__analyze_top_liked_posts()
@@ -63,7 +67,7 @@ class InstaMeter:
         self.user['p'] = data['user']['media']['count']
         self.user['iv'] = data['user']['is_verified']
         self.user['ip'] = data['user']['is_private']
-        self.user['a'] = {'cc': 0, 'lc': 0, 'vv': 0}
+        self.user[COUNTERS_KEY] = {LIKES_COUNT_KEY: 0, COMMENTS_COUNT_KEY: 0, VIDEO_VIEWS_COUNT_KEY: 0}
 
         self.__use_callback({'account': self.user})
 
@@ -84,17 +88,17 @@ class InstaMeter:
                     post = post['node']
                     comments = post['edge_media_to_comment']['count']
                     likes = post['edge_media_preview_like']['count']
-                    self.user['a']['cc'] += comments
-                    self.user['a']['lc'] += likes
+                    self.user[COUNTERS_KEY][LIKES_COUNT_KEY] += likes
+                    self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY] += comments
                     text = post['edge_media_to_caption']['edges']
                     tmp_post = {
                         'id': post['id'],
                         'd': post['taken_at_timestamp'],
                         'code': post['shortcode'],
                         't': text[0]['node']['text'][0:100] if text else '',
-                        'cc': comments,
-                        'lk': likes,
-                        'vv': self.__count_views(post, 'video_view_count'),
+                        LIKES_COUNT_KEY: likes,
+                        COMMENTS_COUNT_KEY: comments,
+                        VIDEO_VIEWS_COUNT_KEY: self.__count_views(post, 'video_view_count'),
                     }
                     posts_for_update.append(tmp_post)
                 self.posts.extend(posts_for_update)
@@ -122,16 +126,16 @@ class InstaMeter:
         for post in posts:
             comments = post['comments']['count']
             likes = post['likes']['count']
-            self.user['a']['cc'] += comments
-            self.user['a']['lc'] += likes
+            self.user[COUNTERS_KEY][LIKES_COUNT_KEY] += likes
+            self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY] += comments
             tmp_post = {
                 'id': post['id'],
                 'd': post['date'],
                 'code': post['code'],
                 't': post['caption'],
-                'cc': comments,
-                'lk': likes,
-                'vv': self.__count_views(post, 'video_views'),
+                LIKES_COUNT_KEY: likes,
+                COMMENTS_COUNT_KEY: comments,
+                VIDEO_VIEWS_COUNT_KEY: self.__count_views(post, 'video_views'),
             }
             posts_for_update.append(tmp_post)
         self.posts.extend(posts_for_update)
@@ -140,7 +144,7 @@ class InstaMeter:
 
     def __count_views(self, post, key):
         video_views = post[key] if post['is_video'] else 0
-        self.user['a']['vv'] += video_views
+        self.user[COUNTERS_KEY][VIDEO_VIEWS_COUNT_KEY] += video_views
         return video_views
 
     @staticmethod
@@ -156,13 +160,13 @@ class InstaMeter:
         return response.read()
 
     def __analyze_top_liked_posts(self):
-        self.top_posts_liked = self.__sort_posts('lk')
+        self.top_posts_liked = self.__sort_posts(LIKES_COUNT_KEY)
 
     def __analyze_top_commented_posts(self):
-        self.top_posts_commented = self.__sort_posts('cc')
+        self.top_posts_commented = self.__sort_posts(COMMENTS_COUNT_KEY)
 
     def __analyze_top_viewed_posts(self):
-        self.top_posts_viewed = self.__sort_posts('vv')
+        self.top_posts_viewed = self.__sort_posts(VIDEO_VIEWS_COUNT_KEY)
 
     def __sort_posts(self, key):
         tmp_posts = list(self.posts)
@@ -182,9 +186,9 @@ class InstaMeter:
             'following': self.user['f'],
             'followed': self.user['fb'],
             'posts': self.user['p'],
-            'likes': self.user['a']['lc'],
-            'comments': self.user['a']['cc'],
-            'video views': self.user['a']['vv'],
+            'likes': self.user[COUNTERS_KEY][LIKES_COUNT_KEY],
+            'comments': self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY],
+            'video views': self.user[COUNTERS_KEY][VIDEO_VIEWS_COUNT_KEY],
         }
         print('+-- https://instagram.com/{:-<37}+'.format(self.user['un'] + '/ '))
         print('|   {:<27}|{:^31}|'.format('counter', 'value'))
@@ -201,13 +205,13 @@ class InstaMeter:
             self.__print_top_rest(posts, counter_text, key)
 
     def print_top_liked(self, count=10):
-        self.__print_top(self.top_posts_liked[0:count], 'top liked posts', 'lk', 'likes')
+        self.__print_top(self.top_posts_liked[0:count], 'top liked posts', LIKES_COUNT_KEY, 'likes')
 
     def print_top_commented(self, count=10):
-        self.__print_top(self.top_posts_commented[0:count], 'top commented posts', 'cc', 'comments')
+        self.__print_top(self.top_posts_commented[0:count], 'top commented posts', COMMENTS_COUNT_KEY, 'comments')
 
     def print_top_viewed(self, count=10):
-        self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', 'vv', 'viewes')
+        self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', VIDEO_VIEWS_COUNT_KEY, 'views')
 
     @staticmethod
     def __print_top_header(text):
