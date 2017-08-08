@@ -17,21 +17,22 @@ LIKES_COUNT_KEY = 'lc'
 COMMENTS_COUNT_KEY = 'cc'
 VIDEO_VIEWS_COUNT_KEY = 'vc'
 
+
 class InstaMeter:
-    user = {}
-    posts = []
     __profile_fp_url = 'https://www.instagram.com/{}/?__a=1'
     __profile_rp_url = 'https://www.instagram.com/graphql/query/?query_id=17888483320059182&variables={}'
-    __tmp_req_info = None
-    __tmp_data = []
-    top_posts_liked = []
-    top_posts_commented = []
-    top_posts_viewed = []
-    __error = None
 
     def __init__(self, username, callback=None):
         self.username = username
         self.callback = callback
+        self.user = {}
+        self.posts = []
+        self.__tmp_req_info = None
+        self.__tmp_data = []
+        self.top_posts_liked = []
+        self.top_posts_commented = []
+        self.top_posts_viewed = []
+        self.__error = None
 
     def analyze_profile(self):
         try:
@@ -102,7 +103,6 @@ class InstaMeter:
                     }
                     posts_for_update.append(tmp_post)
                 self.posts.extend(posts_for_update)
-
                 self.__use_callback({'account': self.user})
                 self.__use_callback({'posts': posts_for_update})
 
@@ -172,7 +172,7 @@ class InstaMeter:
         tmp_posts = list(self.posts)
         tmp_posts.sort(key=lambda post: post[key], reverse=True)
         posts = [post for post in tmp_posts if post[key] > 0][0:12]
-        self.__use_callback({'posts_top_'.format(key): posts})
+        self.__use_callback({'posts_top_{}'.format(key): posts})
         return posts
 
     def __check_user_before_print(self):
