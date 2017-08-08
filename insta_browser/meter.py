@@ -153,20 +153,19 @@ class InstaMeter:
 
     def __analyze_top_liked_posts(self):
         self.top_posts_liked = self.__sort_posts('lk')
-        self.__use_callback({'posts_top_liked': self.top_posts_liked})
 
     def __analyze_top_commented_posts(self):
         self.top_posts_commented = self.__sort_posts('cc')
-        self.__use_callback({'posts_top_commented': self.top_posts_commented})
 
     def __analyze_top_viewed_posts(self):
         self.top_posts_viewed = self.__sort_posts('vv')
-        self.__use_callback({'posts_top_viewed': self.top_posts_viewed})
 
     def __sort_posts(self, key):
         tmp_posts = list(self.posts)
         tmp_posts.sort(key=lambda post: post[key], reverse=True)
-        return [post for post in tmp_posts if post[key] > 0]
+        posts = [post for post in tmp_posts if post[key] > 0][0:12]
+        self.__use_callback({'posts_top_liked': posts})
+        return posts
 
     def __check_user_before_print(self):
         if not self.user:
