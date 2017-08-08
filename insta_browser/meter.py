@@ -79,6 +79,7 @@ class InstaMeter:
         if not self.user['ip']:
             while self.posts.__len__() < self.user['p']:
                 self.__request_for_rest_loop()
+                posts_for_update = []
                 for post in self.__tmp_data:
                     post = post['node']
                     comments = post['edge_media_to_comment']['count']
@@ -95,10 +96,11 @@ class InstaMeter:
                         'lk': likes,
                         'vv': self.__count_views(post, 'video_view_count'),
                     }
-                    self.posts.append(tmp_post)
+                    posts_for_update.append(tmp_post)
+                self.posts.extend(posts_for_update)
 
                 self.__use_callback({'account': self.user})
-                self.__use_callback({'posts': self.posts})
+                self.__use_callback({'posts': posts_for_update})
 
     def __request_for_rest_loop(self):
         var_json = {
@@ -116,6 +118,7 @@ class InstaMeter:
         return self.__tmp_req_info
 
     def __process_posts_first(self, posts):
+        posts_for_update = []
         for post in posts:
             comments = post['comments']['count']
             likes = post['likes']['count']
@@ -130,9 +133,10 @@ class InstaMeter:
                 'lk': likes,
                 'vv': self.__count_views(post, 'video_views'),
             }
-            self.posts.append(tmp_post)
+            posts_for_update.append(tmp_post)
+        self.posts.extend(posts_for_update)
         self.__use_callback({'account': self.user})
-        self.__use_callback({'posts': self.posts})
+        self.__use_callback({'posts': posts_for_update})
 
     def __count_views(self, post, key):
         video_views = post[key] if post['is_video'] else 0
