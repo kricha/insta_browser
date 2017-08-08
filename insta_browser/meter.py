@@ -150,19 +150,18 @@ class InstaMeter:
         return response.read()
 
     def __analyze_top_liked_posts(self):
-        tmp_posts = list(self.posts)
-        tmp_posts.sort(key=lambda post: post['lk'], reverse=True)
-        self.top_posts_liked = [post for post in tmp_posts if post['lk'] > 0]
+        self.top_posts_liked = self.__sort_posts('lk')
 
     def __analyze_top_commented_posts(self):
-        tmp_posts = list(self.posts)
-        tmp_posts.sort(key=lambda post: post['cc'], reverse=True)
-        self.top_posts_commented = [post for post in tmp_posts if post['cc'] > 0]
+        self.top_posts_commented = self.__sort_posts('cc')
 
     def __analyze_top_viewed_posts(self):
+        self.top_posts_viewed = self.__sort_posts('vv')
+
+    def __sort_posts(self, key):
         tmp_posts = list(self.posts)
-        tmp_posts.sort(key=lambda post: post['vv'], reverse=True)
-        self.top_posts_viewed = [post for post in tmp_posts if post['vv'] > 0]
+        tmp_posts.sort(key=lambda post: post[key], reverse=True)
+        return [post for post in tmp_posts if post[key] > 0]
 
     def __check_user_before_print(self):
         if not self.user:
@@ -190,32 +189,30 @@ class InstaMeter:
     def print_top_liked(self, count=10):
         self.__check_user_before_print()
         if not self.user['ip']:
-            print('+{:-^62}+'.format('', ''))
-            print('|{:^62}|'.format('top liked posts'))
-            print('+{:-^62}+'.format('', ''))
-            for post in self.top_posts_liked[0:count]:
-                text = 'https://instagram.com/p/{}/ - {} likes'.format(post['code'], post['lk'])
-                print('|{:^62}|'.format(text))
-            print('+{:-^62}+'.format('', ''))
+            self.__print_top_header('top liked posts')
+            self.__print_top_rest(self.top_posts_liked[0:count], 'likes', 'lk')
 
     def print_top_commented(self, count=10):
         self.__check_user_before_print()
         if not self.user['ip']:
-            print('+{:-^62}+'.format('', ''))
-            print('|{:^62}|'.format('top commented posts'))
-            print('+{:-^62}+'.format('', ''))
-            for post in self.top_posts_commented[0:count]:
-                text = 'https://instagram.com/p/{}/ - {} comments'.format(post['code'], post['cc'])
-                print('|{:^62}|'.format(text))
-            print('+{:-^62}+'.format(''))
+            self.__print_top_header('top commented posts')
+            self.__print_top_rest(self.top_posts_commented[0:count], 'comments', 'cc')
 
     def print_top_viewed(self, count=10):
         self.__check_user_before_print()
         if not self.user['ip'] and self.top_posts_viewed:
-            print('+{:-^62}+'.format('', ''))
-            print('|{:^62}|'.format('top viewed posts'))
-            print('+{:-^62}+'.format('', ''))
-            for post in self.top_posts_viewed[0:count]:
-                text = 'https://instagram.com/p/{}/ - {} views'.format(post['code'], post['vv'])
-                print('|{:^62}|'.format(text))
-            print('+{:-^62}+'.format(''))
+            self.__print_top_header('top viewed posts')
+            self.__print_top_rest(self.top_posts_commented[0:count], 'views', 'vv')
+
+    @staticmethod
+    def __print_top_header(text):
+        print('+{:-^62}+'.format('', ''))
+        print('|{:^62}|'.format(text))
+        print('+{:-^62}+'.format('', ''))
+
+    @staticmethod
+    def __print_top_rest(posts, text, key):
+        for post in posts:
+            text = 'https://instagram.com/p/{}/ - {} {}'.format(post['code'], post[key], text)
+            print('|{:^62}|'.format(text))
+        print('+{:-^62}+'.format('', ''))
