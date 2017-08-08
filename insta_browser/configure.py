@@ -1,8 +1,9 @@
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
+ua = 'Opera/9.80 (Windows NT 6.1; WOW64; U; en) Presto/2.10.229 Version/11.62'
+
 
 def set_headers(driver):
-    ua = 'Opera/9.80 (Windows NT 6.1; WOW64; U; en) Presto/2.10.229 Version/11.62'
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.8',
