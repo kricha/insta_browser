@@ -120,7 +120,7 @@ class InstaMeter:
 
     def __process_posts_rest(self):
         for post in self.__tmp_data:
-            post = post.values()[0]
+            post = post['node']
             comments = post['edge_media_to_comment']['count']
             likes = post['edge_media_preview_like']['count']
             self.user['a']['cc'] += comments
