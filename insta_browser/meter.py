@@ -57,6 +57,7 @@ class InstaMeter:
         self.user['un'] = self.username
         self.user['id'] = data['user']['id']
         self.user['fn'] = data['user']['full_name']
+        self.user['pic'] = data['user']['profile_pic_url_hd']
         self.user['f'] = data['user']['follows']['count']
         self.user['fb'] = data['user']['followed_by']['count']
         self.user['p'] = data['user']['media']['count']
@@ -64,7 +65,7 @@ class InstaMeter:
         self.user['ip'] = data['user']['is_private']
         self.user['a'] = {'cc': 0, 'lc': 0, 'vv': 0}
 
-        self.__use_callback(self.user)
+        self.__use_callback({'account': self.user})
 
         if not self.user['ip']:
             self.__process_posts_first(data['user']['media']['nodes'])
@@ -76,9 +77,28 @@ class InstaMeter:
 
     def __get_profile_rest_posts(self):
         if not self.user['ip']:
-            while self.__request_for_rest_loop()['has_next_page']:
-                pass
-            self.__process_posts_rest()
+            while self.posts.__len__() < self.user['p']:
+                self.__request_for_rest_loop()
+                for post in self.__tmp_data:
+                    post = post['node']
+                    comments = post['edge_media_to_comment']['count']
+                    likes = post['edge_media_preview_like']['count']
+                    self.user['a']['cc'] += comments
+                    self.user['a']['lc'] += likes
+                    text = post['edge_media_to_caption']['edges']
+                    tmp_post = {
+                        'id': post['id'],
+                        'd': post['taken_at_timestamp'],
+                        'code': post['shortcode'],
+                        't': text[0]['node']['text'][0:100] if text else '',
+                        'cc': comments,
+                        'lk': likes,
+                        'vv': self.__count_views(post, 'video_view_count'),
+                    }
+                    self.posts.append(tmp_post)
+
+                self.__use_callback({'account': self.user})
+                self.__use_callback({'posts': self.posts})
 
     def __request_for_rest_loop(self):
         var_json = {
@@ -90,7 +110,7 @@ class InstaMeter:
         variable = json.dumps(var_json).replace(' ', '')
         url = self.__profile_rp_url.format(quote(variable))
         data = json.loads(self.__process_url(url))
-        self.__tmp_data.extend(data['data']['user']['edge_owner_to_timeline_media']['edges'])
+        self.__tmp_data = data['data']['user']['edge_owner_to_timeline_media']['edges']
         self.__tmp_req_info = data['data']['user']['edge_owner_to_timeline_media']['page_info']
 
         return self.__tmp_req_info
@@ -108,35 +128,16 @@ class InstaMeter:
                 't': post['caption'],
                 'cc': comments,
                 'lk': likes,
-                'vv': self.__count_viewes(post, 'video_viewes'),
+                'vv': self.__count_views(post, 'video_views'),
             }
-
             self.posts.append(tmp_post)
+        self.__use_callback({'account': self.user})
+        self.__use_callback({'posts': self.posts})
 
-    def __count_viewes(self, post, key):
+    def __count_views(self, post, key):
         video_views = post[key] if post['is_video'] else 0
         self.user['a']['vv'] += video_views
         return video_views
-
-    def __process_posts_rest(self):
-        for post in self.__tmp_data:
-            post = post['node']
-            comments = post['edge_media_to_comment']['count']
-            likes = post['edge_media_preview_like']['count']
-            self.user['a']['cc'] += comments
-            self.user['a']['lc'] += likes
-            text = post['edge_media_to_caption']['edges']
-            tmp_post = {
-                'id': post['id'],
-                'd': post['taken_at_timestamp'],
-                'code': post['shortcode'],
-                't': text[0]['node']['text'][0:100] if text else '',
-                'cc': comments,
-                'lk': likes,
-                'vv': self.__count_viewes(post, 'video_view_count'),
-            }
-            self.posts.append(tmp_post)
-        self.__use_callback(self.posts)
 
     @staticmethod
     def __process_url(url):
@@ -152,15 +153,15 @@ class InstaMeter:
 
     def __analyze_top_liked_posts(self):
         self.top_posts_liked = self.__sort_posts('lk')
-        self.__use_callback(self.top_posts_liked)
+        self.__use_callback({'posts_top_liked': self.top_posts_liked})
 
     def __analyze_top_commented_posts(self):
         self.top_posts_commented = self.__sort_posts('cc')
-        self.__use_callback(self.top_posts_commented)
+        self.__use_callback({'posts_top_commented': self.top_posts_commented})
 
     def __analyze_top_viewed_posts(self):
         self.top_posts_viewed = self.__sort_posts('vv')
-        self.__use_callback(self.top_posts_viewed)
+        self.__use_callback({'posts_top_viewed': self.top_posts_viewed})
 
     def __sort_posts(self, key):
         tmp_posts = list(self.posts)
