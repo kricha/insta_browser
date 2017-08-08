@@ -4,7 +4,7 @@ import json
 try:
     import urllib.request as simple_browser
 except ImportError:
-    import urllib3 as simple_browser
+    import urllib2 as simple_browser
 from .configure import ua
 
 try:
@@ -106,13 +106,15 @@ class InstaMeter:
                 't': post['caption'],
                 'cc': comments,
                 'lk': likes,
-                'vv': 0,
+                'vv': self.__count_viewes(post, 'video_viewes'),
             }
-            if post['is_video']:
-                video_views = post['video_views']
-                self.user['a']['vv'] += video_views
-                tmp_post['vv'] = video_views
+
             self.posts.append(tmp_post)
+
+    def __count_viewes(self, post, key):
+        video_views = post[key] if post['is_video'] else 0
+        self.user['a']['vv'] += video_views
+        return video_views
 
     def __process_posts_rest(self):
         for post in self.__tmp_data:
@@ -129,12 +131,8 @@ class InstaMeter:
                 't': text[0]['node']['text'][0:100] if text else '',
                 'cc': comments,
                 'lk': likes,
-                'vv': 0,
+                'vv': self.__count_viewes(post, 'video_view_count'),
             }
-            if post['is_video']:
-                video_views = post['video_view_count']
-                self.user['a']['vv'] += video_views
-                tmp_post['vv'] = video_views
             self.posts.append(tmp_post)
 
     @staticmethod
@@ -186,23 +184,20 @@ class InstaMeter:
         print('|{: ^62}|'.format(''))
         print('+{:-^62}+'.format(' https://github.com/aLkRicha/insta_browser '))
 
-    def print_top_liked(self, count=10):
+    def __print_top(self, posts, header_text, key, counter_text):
         self.__check_user_before_print()
         if not self.user['ip']:
-            self.__print_top_header('top liked posts')
-            self.__print_top_rest(self.top_posts_liked[0:count], 'likes', 'lk')
+            self.__print_top_header(header_text)
+            self.__print_top_rest(posts, counter_text, key)
+
+    def print_top_liked(self, count=10):
+        self.__print_top(self.top_posts_liked[0:count], 'top liked posts', 'lk', 'likes')
 
     def print_top_commented(self, count=10):
-        self.__check_user_before_print()
-        if not self.user['ip']:
-            self.__print_top_header('top commented posts')
-            self.__print_top_rest(self.top_posts_commented[0:count], 'comments', 'cc')
+        self.__print_top(self.top_posts_commented[0:count], 'top commented posts', 'cc', 'comments')
 
     def print_top_viewed(self, count=10):
-        self.__check_user_before_print()
-        if not self.user['ip'] and self.top_posts_viewed:
-            self.__print_top_header('top viewed posts')
-            self.__print_top_rest(self.top_posts_commented[0:count], 'views', 'vv')
+        self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', 'vv', 'viewes')
 
     @staticmethod
     def __print_top_header(text):
@@ -213,6 +208,6 @@ class InstaMeter:
     @staticmethod
     def __print_top_rest(posts, text, key):
         for post in posts:
-            text = 'https://instagram.com/p/{}/ - {} {}'.format(post['code'], post[key], text)
-            print('|{:^62}|'.format(text))
+            print_text = 'https://instagram.com/p/{}/ - {} {}'.format(post['code'], post[key], text)
+            print('|{:^62}|'.format(print_text))
         print('+{:-^62}+'.format('', ''))
