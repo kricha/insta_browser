@@ -25,8 +25,7 @@ class InstaMeter:
     top_posts_viewed = []
     __error = None
 
-    def __init__(self, username, browser=None, callback=None):
-        self.browser = browser
+    def __init__(self, username, callback=None):
         self.username = username
         self.callback = callback
 
@@ -65,12 +64,15 @@ class InstaMeter:
         self.user['ip'] = data['user']['is_private']
         self.user['a'] = {'cc': 0, 'lc': 0, 'vv': 0}
 
+        self.__use_callback(self.user)
+
         if not self.user['ip']:
             self.__process_posts_first(data['user']['media']['nodes'])
             self.__tmp_req_info = data['user']['media']['page_info']
 
+    def __use_callback(self, data):
         if callable(self.callback):
-            self.callback(self.user)
+            self.callback(data)
 
     def __get_profile_rest_posts(self):
         if not self.user['ip']:
@@ -134,6 +136,7 @@ class InstaMeter:
                 'vv': self.__count_viewes(post, 'video_view_count'),
             }
             self.posts.append(tmp_post)
+        self.__use_callback(self.posts)
 
     @staticmethod
     def __process_url(url):
@@ -149,12 +152,15 @@ class InstaMeter:
 
     def __analyze_top_liked_posts(self):
         self.top_posts_liked = self.__sort_posts('lk')
+        self.__use_callback(self.top_posts_liked)
 
     def __analyze_top_commented_posts(self):
         self.top_posts_commented = self.__sort_posts('cc')
+        self.__use_callback(self.top_posts_commented)
 
     def __analyze_top_viewed_posts(self):
         self.top_posts_viewed = self.__sort_posts('vv')
+        self.__use_callback(self.top_posts_viewed)
 
     def __sort_posts(self, key):
         tmp_posts = list(self.posts)
