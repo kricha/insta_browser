@@ -168,7 +168,7 @@ class InstaMeter:
         tmp_posts = list(self.posts)
         tmp_posts.sort(key=lambda post: post[key], reverse=True)
         posts = [post for post in tmp_posts if post[key] > 0][0:12]
-        self.__use_callback({'posts_top_liked': posts})
+        self.__use_callback({'posts_top_'.format(key): posts})
         return posts
 
     def __check_user_before_print(self):
