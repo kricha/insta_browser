@@ -39,17 +39,20 @@ class InstaMeter:
             self.__get_profile_first_posts()
         except ValueError as exc:
             self.__error = "{}".format(exc)
+            self.__use_callback({'success': False, 'error': self.__error})
             return self.__error
-        self.__get_profile_rest_posts()
-        self.__analyze_top_liked_posts()
-        self.__analyze_top_commented_posts()
-        self.__analyze_top_viewed_posts()
+        if not self.user['ip']:
+            self.__get_profile_rest_posts()
+            self.__analyze_top_liked_posts()
+            self.__analyze_top_commented_posts()
+            self.__analyze_top_viewed_posts()
 
         return json.dumps({
             'account': self.user,
             'posts': self.posts,
-            'top_posts_liked': self.top_posts_liked[0:10],
-            'top_posts_commented': self.top_posts_commented[0:10],
+            'top_posts_liked': self.top_posts_liked,
+            'top_posts_commented': self.top_posts_commented,
+            'top_posts_viewed': self.top_posts_viewed,
         }, ensure_ascii=False)
 
     def __get_profile_first_posts(self):
@@ -70,7 +73,7 @@ class InstaMeter:
         self.user['ip'] = data['user']['is_private']
         self.user[COUNTERS_KEY] = {LIKES_COUNT_KEY: 0, COMMENTS_COUNT_KEY: 0, VIDEO_VIEWS_COUNT_KEY: 0}
 
-        self.__use_callback({'account': self.user})
+        self.__use_callback({'account': self.user, 'success': True})
 
         if not self.user['ip']:
             self.__process_posts_first(data['user']['media']['nodes'])
@@ -81,30 +84,29 @@ class InstaMeter:
             self.callback(data)
 
     def __get_profile_rest_posts(self):
-        if not self.user['ip']:
-            while self.posts.__len__() < self.user['p']:
-                self.__request_for_rest_loop()
-                posts_for_update = []
-                for post in self.__tmp_data:
-                    post = post['node']
-                    comments = post['edge_media_to_comment']['count']
-                    likes = post['edge_media_preview_like']['count']
-                    self.user[COUNTERS_KEY][LIKES_COUNT_KEY] += likes
-                    self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY] += comments
-                    text = post['edge_media_to_caption']['edges']
-                    tmp_post = {
-                        'id': post['id'],
-                        'd': post['taken_at_timestamp'],
-                        'code': post['shortcode'],
-                        't': text[0]['node']['text'][0:99] if text else '',
-                        LIKES_COUNT_KEY: likes,
-                        COMMENTS_COUNT_KEY: comments,
-                        VIDEO_VIEWS_COUNT_KEY: self.__count_views(post, 'video_view_count'),
-                    }
-                    posts_for_update.append(tmp_post)
-                self.posts.extend(posts_for_update)
-                self.__use_callback({'account': self.user})
-                self.__use_callback({'posts': posts_for_update})
+        while self.posts.__len__() < self.user['p']:
+            self.__request_for_rest_loop()
+            posts_for_update = []
+            for post in self.__tmp_data:
+                post = post['node']
+                comments = post['edge_media_to_comment']['count']
+                likes = post['edge_media_preview_like']['count']
+                self.user[COUNTERS_KEY][LIKES_COUNT_KEY] += likes
+                self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY] += comments
+                text = post['edge_media_to_caption']['edges']
+                tmp_post = {
+                    'id': post['id'],
+                    'd': post['taken_at_timestamp'],
+                    'code': post['shortcode'],
+                    't': text[0]['node']['text'][0:99] if text else '',
+                    LIKES_COUNT_KEY: likes,
+                    COMMENTS_COUNT_KEY: comments,
+                    VIDEO_VIEWS_COUNT_KEY: self.__count_views(post, 'video_view_count'),
+                }
+                posts_for_update.append(tmp_post)
+            self.posts.extend(posts_for_update)
+            self.__use_callback({'account': self.user, 'success': True})
+            self.__use_callback({'posts': posts_for_update, 'success': True})
 
     def __request_for_rest_loop(self):
         var_json = {
@@ -139,8 +141,8 @@ class InstaMeter:
             }
             posts_for_update.append(tmp_post)
         self.posts.extend(posts_for_update)
-        self.__use_callback({'account': self.user})
-        self.__use_callback({'posts': posts_for_update})
+        self.__use_callback({'account': self.user, 'success': True})
+        self.__use_callback({'posts': posts_for_update, 'success': True})
 
     def __count_views(self, post, key):
         video_views = post[key] if post['is_video'] else 0
@@ -172,7 +174,7 @@ class InstaMeter:
         tmp_posts = list(self.posts)
         tmp_posts.sort(key=lambda post: post[key], reverse=True)
         posts = [post for post in tmp_posts if post[key] > 0][0:12]
-        self.__use_callback({'posts_top_{}'.format(key): posts})
+        self.__use_callback({'posts_top_{}'.format(key): posts, 'success': True})
         return posts
 
     def __check_user_before_print(self):
