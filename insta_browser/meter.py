@@ -46,7 +46,7 @@ class InstaMeter:
             self.__analyze_top_liked_posts()
             self.__analyze_top_commented_posts()
             self.__analyze_top_viewed_posts()
-        self.__use_callback({'account_result': self.user, 'success': True})
+        self.__use_callback({'data': {'account_result': self.user}, 'success': True})
 
         return json.dumps({
             'account': self.user,
@@ -74,7 +74,7 @@ class InstaMeter:
         self.user['ip'] = data['user']['is_private']
         self.user[COUNTERS_KEY] = {LIKES_COUNT_KEY: 0, COMMENTS_COUNT_KEY: 0, VIDEO_VIEWS_COUNT_KEY: 0}
 
-        self.__use_callback({'account': self.user, 'success': True})
+        self.__use_callback({'data': {'account': self.user}, 'success': True})
 
         if not self.user['ip']:
             self.__process_posts_first(data['user']['media']['nodes'])
@@ -106,8 +106,8 @@ class InstaMeter:
                 }
                 posts_for_update.append(tmp_post)
             self.posts.extend(posts_for_update)
-            self.__use_callback({'account': self.user, 'success': True})
-            self.__use_callback({'posts': posts_for_update, 'success': True})
+            self.__use_callback({'data': {'account': self.user}, 'success': True})
+            self.__use_callback({'data': {'posts': posts_for_update}, 'success': True})
 
     def __request_for_rest_loop(self):
         var_json = {
@@ -142,8 +142,8 @@ class InstaMeter:
             }
             posts_for_update.append(tmp_post)
         self.posts.extend(posts_for_update)
-        self.__use_callback({'account': self.user, 'success': True})
-        self.__use_callback({'posts': posts_for_update, 'success': True})
+        self.__use_callback({'data': {'account': self.user}, 'success': True})
+        self.__use_callback({'data': {'posts': posts_for_update}, 'success': True})
 
     def __count_views(self, post, key):
         video_views = post[key] if post['is_video'] else 0
@@ -175,7 +175,7 @@ class InstaMeter:
         tmp_posts = list(self.posts)
         tmp_posts.sort(key=lambda post: post[key], reverse=True)
         posts = [post for post in tmp_posts if post[key] > 0][0:12]
-        self.__use_callback({'posts_top_{}'.format(key): posts, 'success': True})
+        self.__use_callback({'data': {'posts_top_{}'.format(key): posts}, 'success': True})
         return posts
 
     def __check_user_before_print(self):
