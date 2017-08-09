@@ -46,6 +46,7 @@ class InstaMeter:
             self.__analyze_top_liked_posts()
             self.__analyze_top_commented_posts()
             self.__analyze_top_viewed_posts()
+        self.__use_callback({'account_result': self.user, 'success': True})
 
         return json.dumps({
             'account': self.user,
