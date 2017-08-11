@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import re
 
 try:
     import urllib.request as simple_browser
@@ -99,7 +100,7 @@ class InstaMeter:
                     'id': post['id'],
                     'd': post['taken_at_timestamp'],
                     'code': post['shortcode'],
-                    't': text[0]['node']['text'][0:99] if text else '',
+                    't': self.__prepare_post_text(text[0]['node']['text']) if text else '',
                     LIKES_COUNT_KEY: likes,
                     COMMENTS_COUNT_KEY: comments,
                     VIDEO_VIEWS_COUNT_KEY: self.__count_views(post, 'video_view_count'),
@@ -108,6 +109,11 @@ class InstaMeter:
             self.posts.extend(posts_for_update)
             self.__use_callback({'data': {'account': self.user}, '_id': self.user['id'], 'success': True})
             self.__use_callback({'data': {'posts': posts_for_update}, '_id': self.user['id'], 'success': True})
+
+    @staticmethod
+    def __prepare_post_text(text):
+        prepared = re.sub(r"(\#[\w]+ ?)", '', str(text), flags=re.U)[0:99]
+        return prepared
 
     def __request_for_rest_loop(self):
         var_json = {
@@ -135,7 +141,7 @@ class InstaMeter:
                 'id': post['id'],
                 'd': post['date'],
                 'code': post['code'],
-                't': post['caption'][0:99] if 'caption' in post else '',
+                't': self.__prepare_post_text(post['caption']) if 'caption' in post else '',
                 LIKES_COUNT_KEY: likes,
                 COMMENTS_COUNT_KEY: comments,
                 VIDEO_VIEWS_COUNT_KEY: self.__count_views(post, 'video_views'),
