@@ -67,6 +67,7 @@ class InstaMeter:
         self.user['un'] = self.username
         self.user['id'] = data['user']['id']
         self.user['fn'] = data['user']['full_name']
+        self.user['b'] = data['user']['biography']
         self.user['pic'] = data['user']['profile_pic_url_hd']
         self.user['f'] = data['user']['follows']['count']
         self.user['fb'] = data['user']['followed_by']['count']
