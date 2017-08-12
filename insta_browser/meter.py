@@ -52,6 +52,8 @@ class InstaMeter:
             self.__analyze_top_viewed_posts()
         self.__use_callback({'data': {'account_result': self.user}, '_id': self.user['id'],
                              'progress': self.__calculate_progress(), 'success': True})
+        self.__use_callback({'data': {'posts_result': self.posts}, '_id': self.user['id'],
+                             'progress': self.__calculate_progress(), 'success': True})
 
         return json.dumps({
             'account': self.user,
