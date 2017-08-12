@@ -17,6 +17,9 @@ COUNTERS_KEY = 'acc'
 LIKES_COUNT_KEY = 'lc'
 COMMENTS_COUNT_KEY = 'cc'
 VIDEO_VIEWS_COUNT_KEY = 'vc'
+LIKES_PER_POST_COUNT_KEY = 'lpp'
+COMMENTS_PER_POST_COUNT_KEY = 'cpp'
+VIEWS_PER_POST_COUNT_KEY = 'vpp'
 
 
 class InstaMeter:
@@ -47,7 +50,8 @@ class InstaMeter:
             self.__analyze_top_liked_posts()
             self.__analyze_top_commented_posts()
             self.__analyze_top_viewed_posts()
-        self.__use_callback({'data': {'account_result': self.user}, '_id': self.user['id'], 'success': True})
+        self.__use_callback({'data': {'account_result': self.user}, '_id': self.user['id'],
+                             'progress': self.__calculate_progress(), 'success': True})
 
         return json.dumps({
             'account': self.user,
@@ -74,9 +78,17 @@ class InstaMeter:
         self.user['p'] = data['user']['media']['count']
         self.user['iv'] = data['user']['is_verified']
         self.user['ip'] = data['user']['is_private']
-        self.user[COUNTERS_KEY] = {LIKES_COUNT_KEY: 0, COMMENTS_COUNT_KEY: 0, VIDEO_VIEWS_COUNT_KEY: 0}
+        self.user[COUNTERS_KEY] = {
+            LIKES_COUNT_KEY: 0,
+            COMMENTS_COUNT_KEY: 0,
+            VIDEO_VIEWS_COUNT_KEY: 0,
+            LIKES_PER_POST_COUNT_KEY: 0,
+            COMMENTS_PER_POST_COUNT_KEY: 0,
+            VIEWS_PER_POST_COUNT_KEY: 0,
+        }
 
-        self.__use_callback({'data': {'account': self.user}, '_id': self.user['id'], 'success': True})
+        self.__use_callback({'data': {'account': self.user}, '_id': self.user['id'],
+                             'progress': self.__calculate_progress(), 'success': True})
 
         if not self.user['ip']:
             self.__process_posts_first(data['user']['media']['nodes'])
@@ -108,13 +120,19 @@ class InstaMeter:
                 }
                 posts_for_update.append(tmp_post)
             self.posts.extend(posts_for_update)
-            self.__use_callback({'data': {'account': self.user}, '_id': self.user['id'], 'success': True})
-            self.__use_callback({'data': {'posts': posts_for_update}, '_id': self.user['id'], 'success': True})
+            self.__calculate_per_post_counters()
+            self.__send_callback_for_post_processing(posts_for_update)
 
     @staticmethod
     def __prepare_post_text(text):
-        prepared = re.sub(r"(\#[\w]+ ?)", '', str(text), flags=re.U)[0:99]
+        prepared = ' '.join(re.sub(r"(\#[\w]+ ?)", '', str(text), flags=re.U).split())[0:99]
         return prepared
+
+    def __calculate_per_post_counters(self):
+        posts = float(self.user['p'])
+        self.user[COUNTERS_KEY][LIKES_PER_POST_COUNT_KEY] = self.user[COUNTERS_KEY][LIKES_COUNT_KEY] / posts
+        self.user[COUNTERS_KEY][COMMENTS_PER_POST_COUNT_KEY] = self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY] / posts
+        self.user[COUNTERS_KEY][VIEWS_PER_POST_COUNT_KEY] = self.user[COUNTERS_KEY][VIDEO_VIEWS_COUNT_KEY] / posts
 
     def __request_for_rest_loop(self):
         var_json = {
@@ -149,8 +167,15 @@ class InstaMeter:
             }
             posts_for_update.append(tmp_post)
         self.posts.extend(posts_for_update)
-        self.__use_callback({'data': {'account': self.user}, '_id': self.user['id'], 'success': True})
-        self.__use_callback({'data': {'posts': posts_for_update}, '_id': self.user['id'], 'success': True})
+        self.__calculate_per_post_counters()
+        self.__send_callback_for_post_processing(posts_for_update)
+
+    def __send_callback_for_post_processing(self, posts):
+        progress = self.__calculate_progress()
+        self.__use_callback({'data': {'account': self.user}, '_id': self.user['id'],
+                             'progress': progress, 'success': True})
+        self.__use_callback({'data': {'posts': posts}, '_id': self.user['id'],
+                             'progress': progress, 'success': True})
 
     def __count_views(self, post, key):
         video_views = post[key] if post['is_video'] else 0
@@ -182,7 +207,8 @@ class InstaMeter:
         tmp_posts = list(self.posts)
         tmp_posts.sort(key=lambda post: post[key], reverse=True)
         posts = [post for post in tmp_posts if post[key] > 0][0:12]
-        self.__use_callback({'data': {'posts_top_{}'.format(key): posts}, '_id': self.user['id'], 'success': True})
+        self.__use_callback({'data': {'posts_top_{}'.format(key): posts}, '_id': self.user['id'],
+                             'progress': 100, 'success': True})
         return posts
 
     def __check_user_before_print(self):
@@ -199,6 +225,9 @@ class InstaMeter:
             'likes': self.user[COUNTERS_KEY][LIKES_COUNT_KEY],
             'comments': self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY],
             'video views': self.user[COUNTERS_KEY][VIDEO_VIEWS_COUNT_KEY],
+            'likes/post': self.user[COUNTERS_KEY][LIKES_PER_POST_COUNT_KEY],
+            'comments/post': self.user[COUNTERS_KEY][COMMENTS_PER_POST_COUNT_KEY],
+            'views/post': self.user[COUNTERS_KEY][VIEWS_PER_POST_COUNT_KEY],
         }
         print('+-- https://instagram.com/{:-<37}+'.format(self.user['un'] + '/ '))
         print('|   {:<27}|{:^31}|'.format('counter', 'value'))
@@ -222,6 +251,9 @@ class InstaMeter:
 
     def print_top_viewed(self, count=10):
         self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', VIDEO_VIEWS_COUNT_KEY, 'views')
+
+    def __calculate_progress(self):
+        return self.posts.__len__() * 100 / float(self.user['p'])
 
     @staticmethod
     def __print_top_header(text):
