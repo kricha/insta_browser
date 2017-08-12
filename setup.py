@@ -14,7 +14,7 @@ setup(
     packages=['insta_browser'],
     include_package_data=True,
     version=version,
-    description='easy parsing/automation instagram.com',
+    description='parsing/automation/statistic instagram.com',
     long_description=description,
     author='Aleksej Krichevsky',
     author_email='krich.al.vl@gmail.com',

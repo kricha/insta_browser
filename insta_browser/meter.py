@@ -45,7 +45,7 @@ class InstaMeter:
             self.__error = "{}".format(exc)
             self.__use_callback({'success': False, 'error': self.__error})
             return self.__error
-        if not self.user['ip']:
+        if not self.user['ip'] and self.user['p']:
             self.__get_profile_rest_posts()
             self.__analyze_top_liked_posts()
             self.__analyze_top_commented_posts()
@@ -89,10 +89,10 @@ class InstaMeter:
 
         self.__send_success_callback('account', self.user)
 
-        if not self.user['ip']:
+        if not self.user['ip'] and self.user['p']:
             self.__process_posts_first(data['user']['media']['nodes'])
             self.__tmp_req_info = data['user']['media']['page_info']
-    
+
     def __send_success_callback(self, key, data):
         self.__use_callback({'data': {key: data}, '_id': self.user['id'],
                              'progress': self.__calculate_progress(), 'success': True})
@@ -134,9 +134,10 @@ class InstaMeter:
     def __calculate_per_post_counters(self):
         posts = float(self.user['p'])
         ck = COUNTERS_KEY
-        self.user[ck][LIKES_PER_POST_COUNT_KEY] = self.user[ck][LIKES_COUNT_KEY] / posts
-        self.user[ck][COMMENTS_PER_POST_COUNT_KEY] = self.user[ck][COMMENTS_COUNT_KEY] / posts
-        self.user[ck][VIEWS_PER_POST_COUNT_KEY] = self.user[ck][VIDEO_VIEWS_COUNT_KEY] / posts
+        if posts:
+            self.user[ck][LIKES_PER_POST_COUNT_KEY] = self.user[ck][LIKES_COUNT_KEY] / posts
+            self.user[ck][COMMENTS_PER_POST_COUNT_KEY] = self.user[ck][COMMENTS_COUNT_KEY] / posts
+            self.user[ck][VIEWS_PER_POST_COUNT_KEY] = self.user[ck][VIDEO_VIEWS_COUNT_KEY] / posts
 
     def __request_for_rest_loop(self):
         var_json = {
@@ -253,7 +254,7 @@ class InstaMeter:
         self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', VIDEO_VIEWS_COUNT_KEY, 'views')
 
     def __calculate_progress(self):
-        return self.posts.__len__() * 100 / float(self.user['p'])
+        return 100 if not self.user['p'] else self.posts.__len__() * 100 / float(self.user['p'])
 
     @staticmethod
     def __print_top_header(text):
