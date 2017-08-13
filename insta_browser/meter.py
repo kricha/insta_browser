@@ -20,6 +20,7 @@ VIDEO_VIEWS_COUNT_KEY = 'vc'
 LIKES_PER_POST_COUNT_KEY = 'lpp'
 COMMENTS_PER_POST_COUNT_KEY = 'cpp'
 VIEWS_PER_POST_COUNT_KEY = 'vpp'
+TOP_PROGRESS = {'lc':85, 'cc': 90, 'vc': 95}
 
 
 class InstaMeter:
@@ -47,11 +48,11 @@ class InstaMeter:
             return self.__error
         if not self.user['ip'] and self.user['p']:
             self.__get_profile_rest_posts()
+            self.__send_success_callback('posts_result', self.posts, 60)
             self.__analyze_top_liked_posts()
             self.__analyze_top_commented_posts()
             self.__analyze_top_viewed_posts()
-            self.__send_success_callback('account_result', self.user)
-            self.__send_success_callback('posts_result', self.posts)
+            self.__send_success_callback('account_result', self.user, 100)
 
         return json.dumps({
             'account': self.user,
@@ -93,9 +94,9 @@ class InstaMeter:
             self.__process_posts_first(data['user']['media']['nodes'])
             self.__tmp_req_info = data['user']['media']['page_info']
 
-    def __send_success_callback(self, key, data):
+    def __send_success_callback(self, key, data, progress=None):
         self.__use_callback({'data': {key: data}, '_id': self.user['id'],
-                             'progress': self.__calculate_progress(), 'success': True})
+                             'progress': progress if progress else self.__calculate_progress(), 'success': True})
 
     def __use_callback(self, data):
         if callable(self.callback):
@@ -209,7 +210,7 @@ class InstaMeter:
         tmp_posts = list(self.posts)
         tmp_posts.sort(key=lambda post: post[key], reverse=True)
         posts = [post for post in tmp_posts if post[key] > 0][0:12]
-        self.__send_success_callback('posts_top_{}'.format(key), posts)
+        self.__send_success_callback('posts_top_{}'.format(key), posts, TOP_PROGRESS[key])
         return posts
 
     def __check_user_before_print(self):
@@ -254,7 +255,9 @@ class InstaMeter:
         self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', VIDEO_VIEWS_COUNT_KEY, 'views')
 
     def __calculate_progress(self):
-        return 100 if not self.user['p'] else self.posts.__len__() * 100 / float(self.user['p'])
+        percent = self.posts.__len__() * 100 / float(self.user['p'])
+        return_percent = percent if percent < 81 else 80
+        return 100 if not self.user['p'] else return_percent
 
     @staticmethod
     def __print_top_header(text):
