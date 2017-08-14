@@ -255,9 +255,12 @@ class InstaMeter:
         self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', VIDEO_VIEWS_COUNT_KEY, 'views')
 
     def __calculate_progress(self):
-        percent = self.posts.__len__() * 100 / float(self.user['p'])
-        return_percent = percent if percent < 81 else 80
-        return 100 if not self.user['p'] else return_percent
+        has_posts = self.user['p']
+        if has_posts:
+            percent = self.posts.__len__() * 100 / float(self.user['p'])
+            return percent if percent < 81 else 80
+        else:
+            return 100
 
     @staticmethod
     def __print_top_header(text):
