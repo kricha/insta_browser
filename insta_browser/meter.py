@@ -256,7 +256,9 @@ class InstaMeter:
 
     def __calculate_progress(self):
         has_posts = self.user['p']
-        if has_posts:
+        if self.user['ip']:
+            return 100
+        elif has_posts:
             percent = self.posts.__len__() * 100 / float(self.user['p'])
             return percent if percent < 81 else 80
         else:
