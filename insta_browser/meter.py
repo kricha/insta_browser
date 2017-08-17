@@ -195,7 +195,7 @@ class InstaMeter:
         }
         request = simple_browser.Request(url, headers=headers)
         response = simple_browser.urlopen(request)
-        return response.read()
+        return response.read().decode('utf-8')
 
     def __analyze_top_liked_posts(self):
         self.top_posts_liked = self.__sort_posts(LIKES_COUNT_KEY)
