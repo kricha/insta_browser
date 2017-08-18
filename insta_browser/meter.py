@@ -103,7 +103,7 @@ class InstaMeter:
             self.callback(data)
 
     def __get_profile_rest_posts(self):
-        while self.posts.__len__() < self.user['p']:
+        while self.__tmp_req_info['has_next_page']:
             self.__request_for_rest_loop()
             posts_for_update = []
             for post in self.__tmp_data:
