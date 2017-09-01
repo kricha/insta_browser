@@ -162,11 +162,12 @@ class InstaMeter:
         self.user[COUNTERS_KEY][COUNT_KEY_LIKES] += likes
         self.user[COUNTERS_KEY][COUNT_KEY_COMMENTS] += comments
         self.user[COUNTERS_KEY][POST_TYPES_KEYS[typename]] += 1
+        vv_tmp = self.__count_views(post) if post['is_video'] else 0
         return {
             'txt': text,
             COUNT_KEY_LIKES: likes,
             COUNT_KEY_COMMENTS: comments,
-            COUNT_KEY_VIDEO_VIEWS: self.__count_views(post, 'video_view_count'),
+            COUNT_KEY_VIDEO_VIEWS: vv_tmp,
             't': POST_TYPES_KEYS[typename],
         }
 
@@ -204,8 +205,8 @@ class InstaMeter:
         self.__send_success_callback('account', self.user)
         self.__send_success_callback('posts', posts)
 
-    def __count_views(self, post, key):
-        video_views = post[key] if post['is_video'] else 0
+    def __count_views(self, post):
+        video_views = post.get('video_views', post.get('video_view_count'))
         self.user[COUNTERS_KEY][COUNT_KEY_VIDEO_VIEWS] += video_views
         return video_views
 
