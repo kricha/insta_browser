@@ -14,13 +14,24 @@ except ImportError:
     from urllib.parse import quote
 
 COUNTERS_KEY = 'acc'
-LIKES_COUNT_KEY = 'lc'
-COMMENTS_COUNT_KEY = 'cc'
-VIDEO_VIEWS_COUNT_KEY = 'vc'
-LIKES_PER_POST_COUNT_KEY = 'lpp'
-COMMENTS_PER_POST_COUNT_KEY = 'cpp'
-VIEWS_PER_POST_COUNT_KEY = 'vpp'
-TOP_PROGRESS = {'lc':85, 'cc': 90, 'vc': 95}
+COUNT_KEY_FOLLOWING = 'f'  # Following
+COUNT_KEY_FOLLOWED_BY = 'fb'  # Followers
+COUNT_KEY_POSTS = 'p'  # Posts
+COUNT_KEY_VIDEO_POSTS = 'pvp'  # Video posts
+COUNT_KEY_IMAGE_POSTS = 'pip'  # Photo posts
+COUNT_KEY_ALBUM_POSTS = 'pap'  # Album posts
+COUNT_KEY_LIKES = 'lc'  # Likes count key
+COUNT_KEY_COMMENTS = 'cc'  # Comments count key
+COUNT_KEY_VIDEO_VIEWS = 'vc'  # Video views count key
+COUNT_KEY_LIKES_PER_POST = 'lpp'  # Likes per post
+COUNT_KEY_COMMENTS_PER_POST = 'cpp'  # Comments per post
+COUNT_KEY_VIEWS_PER_POST = 'vpp'  # Video views per post
+TOP_PROGRESS = {'lc': 85, 'cc': 90, 'vc': 95}
+POST_TYPES_KEYS = {
+    'GraphImage': COUNT_KEY_IMAGE_POSTS,
+    'GraphVideo': COUNT_KEY_VIDEO_POSTS,
+    'GraphSidecar': COUNT_KEY_ALBUM_POSTS,
+}
 
 
 class InstaMeter:
@@ -46,12 +57,13 @@ class InstaMeter:
             self.__error = "{}".format(exc)
             self.__use_callback({'success': False, 'error': self.__error})
             return self.__error
-        if not self.user['ip'] and self.user['p']:
+        if not self.user['ip'] and self.user[COUNTERS_KEY][COUNT_KEY_POSTS]:
             self.__get_profile_rest_posts()
             self.__send_success_callback('posts_result', self.posts, 60)
             self.__analyze_top_liked_posts()
             self.__analyze_top_commented_posts()
             self.__analyze_top_viewed_posts()
+        if not self.user['ip']:
             self.__send_success_callback('account_result', self.user, 100)
 
         return json.dumps({
@@ -74,23 +86,26 @@ class InstaMeter:
         self.user['fn'] = data['user']['full_name']
         self.user['b'] = data['user']['biography']
         self.user['pic'] = data['user']['profile_pic_url_hd']
-        self.user['f'] = data['user']['follows']['count']
-        self.user['fb'] = data['user']['followed_by']['count']
-        self.user['p'] = data['user']['media']['count']
         self.user['iv'] = data['user']['is_verified']
         self.user['ip'] = data['user']['is_private']
         self.user[COUNTERS_KEY] = {
-            LIKES_COUNT_KEY: 0,
-            COMMENTS_COUNT_KEY: 0,
-            VIDEO_VIEWS_COUNT_KEY: 0,
-            LIKES_PER_POST_COUNT_KEY: 0,
-            COMMENTS_PER_POST_COUNT_KEY: 0,
-            VIEWS_PER_POST_COUNT_KEY: 0,
+            COUNT_KEY_FOLLOWING: data['user']['follows']['count'],
+            COUNT_KEY_FOLLOWED_BY: data['user']['followed_by']['count'],
+            COUNT_KEY_POSTS: data['user']['media']['count'],
+            COUNT_KEY_IMAGE_POSTS: 0,
+            COUNT_KEY_VIDEO_POSTS: 0,
+            COUNT_KEY_ALBUM_POSTS: 0,
+            COUNT_KEY_LIKES: 0,
+            COUNT_KEY_COMMENTS: 0,
+            COUNT_KEY_VIDEO_VIEWS: 0,
+            COUNT_KEY_LIKES_PER_POST: 0,
+            COUNT_KEY_COMMENTS_PER_POST: 0,
+            COUNT_KEY_VIEWS_PER_POST: 0,
         }
 
         self.__send_success_callback('account', self.user)
 
-        if not self.user['ip'] and self.user['p']:
+        if not self.user['ip'] and self.user[COUNTERS_KEY][COUNT_KEY_POSTS]:
             self.__process_posts_first(data['user']['media']['nodes'])
             self.__tmp_req_info = data['user']['media']['page_info']
 
@@ -102,48 +117,78 @@ class InstaMeter:
         if callable(self.callback):
             self.callback(data)
 
+    def __process_posts_first(self, posts):
+        posts_for_update = []
+        for post in posts:
+            tmp_post = {
+                'id': post['id'],
+                'd': post['date'],
+                'code': post['code'],
+                'iv': post['is_video'],
+            }
+            tmp_post.update(self.__update_user_and_post_counters(post))
+            posts_for_update.append(tmp_post)
+        self.posts.extend(posts_for_update)
+        self.__calculate_per_post_counters()
+        self.__send_callback_for_post_processing(posts_for_update)
+
     def __get_profile_rest_posts(self):
         while self.__tmp_req_info['has_next_page']:
             self.__request_for_rest_loop()
             posts_for_update = []
             for post in self.__tmp_data:
                 post = post['node']
-                comments = post['edge_media_to_comment']['count']
-                likes = post['edge_media_preview_like']['count']
-                self.user[COUNTERS_KEY][LIKES_COUNT_KEY] += likes
-                self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY] += comments
-                text = post['edge_media_to_caption']['edges']
                 tmp_post = {
                     'id': post['id'],
                     'd': post['taken_at_timestamp'],
                     'code': post['shortcode'],
-                    't': self.__prepare_post_text(text[0]['node']['text']) if text else '',
-                    LIKES_COUNT_KEY: likes,
-                    COMMENTS_COUNT_KEY: comments,
-                    VIDEO_VIEWS_COUNT_KEY: self.__count_views(post, 'video_view_count'),
                 }
+                tmp_post.update(self.__update_user_and_post_counters(post))
                 posts_for_update.append(tmp_post)
             self.posts.extend(posts_for_update)
             self.__calculate_per_post_counters()
             self.__send_callback_for_post_processing(posts_for_update)
 
+    def __update_user_and_post_counters(self, post):
+        typename = post['__typename']
+        comments = post['comments']['count'] if 'comments' in post else post['edge_media_to_comment']['count']
+        likes = post['likes']['count'] if 'likes' in post else post['edge_media_preview_like']['count']
+        if 'edge_media_to_caption' in post:
+            text = post['edge_media_to_caption']['edges'][0]['node']['text'] \
+                if post['edge_media_to_caption']['edges'] \
+                else ''
+        else:
+            text = post['caption'] if 'caption' in post else ''
+        self.user[COUNTERS_KEY][COUNT_KEY_LIKES] += likes
+        self.user[COUNTERS_KEY][COUNT_KEY_COMMENTS] += comments
+        self.user[COUNTERS_KEY][POST_TYPES_KEYS[typename]] += 1
+        return {
+            'txt': text,
+            COUNT_KEY_LIKES: likes,
+            COUNT_KEY_COMMENTS: comments,
+            COUNT_KEY_VIDEO_VIEWS: self.__count_views(post, 'video_view_count'),
+            't': POST_TYPES_KEYS[typename],
+        }
+
     @staticmethod
     def __prepare_post_text(text):
-        prepared = ' '.join(re.sub(r"(\#[\w]+ ?)", '', str(text), flags=re.U).split())[0:99]
+        prepared = ' '.join(re.sub(r"(#[\w]+ ?)", '', str(text), flags=re.U).split())[0:99]
         return prepared
 
     def __calculate_per_post_counters(self):
-        posts = float(self.user['p'])
+        posts = float(self.user[COUNTERS_KEY][COUNT_KEY_POSTS])
         ck = COUNTERS_KEY
         if posts:
-            self.user[ck][LIKES_PER_POST_COUNT_KEY] = self.user[ck][LIKES_COUNT_KEY] / posts
-            self.user[ck][COMMENTS_PER_POST_COUNT_KEY] = self.user[ck][COMMENTS_COUNT_KEY] / posts
-            self.user[ck][VIEWS_PER_POST_COUNT_KEY] = self.user[ck][VIDEO_VIEWS_COUNT_KEY] / posts
+            self.user[ck][COUNT_KEY_LIKES_PER_POST] = self.user[ck][COUNT_KEY_LIKES] / posts
+            self.user[ck][COUNT_KEY_COMMENTS_PER_POST] = self.user[ck][COUNT_KEY_COMMENTS] / posts
+            vpc = sum(1 for p in self.posts if p.get('t') == 'pvp')
+            self.user[ck][COUNT_KEY_VIEWS_PER_POST] = self.user[ck][COUNT_KEY_VIDEO_VIEWS] / vpc if vpc else 0
 
     def __request_for_rest_loop(self):
         var_json = {
             'id': self.user['id'],
-            'first': 500 if self.user['p'] > 500 else self.user['p'] - 12,
+            'first': 500 if self.user[COUNTERS_KEY][COUNT_KEY_POSTS] > 500 else self.user[COUNTERS_KEY][
+                                                                                    COUNT_KEY_POSTS] - 12,
         }
         if self.__tmp_req_info['has_next_page']:
             var_json.update({'after': self.__tmp_req_info['end_cursor']})
@@ -155,34 +200,13 @@ class InstaMeter:
 
         return self.__tmp_req_info
 
-    def __process_posts_first(self, posts):
-        posts_for_update = []
-        for post in posts:
-            comments = post['comments']['count']
-            likes = post['likes']['count']
-            self.user[COUNTERS_KEY][LIKES_COUNT_KEY] += likes
-            self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY] += comments
-            tmp_post = {
-                'id': post['id'],
-                'd': post['date'],
-                'code': post['code'],
-                't': self.__prepare_post_text(post['caption']) if 'caption' in post else '',
-                LIKES_COUNT_KEY: likes,
-                COMMENTS_COUNT_KEY: comments,
-                VIDEO_VIEWS_COUNT_KEY: self.__count_views(post, 'video_views'),
-            }
-            posts_for_update.append(tmp_post)
-        self.posts.extend(posts_for_update)
-        self.__calculate_per_post_counters()
-        self.__send_callback_for_post_processing(posts_for_update)
-
     def __send_callback_for_post_processing(self, posts):
         self.__send_success_callback('account', self.user)
         self.__send_success_callback('posts', posts)
 
     def __count_views(self, post, key):
         video_views = post[key] if post['is_video'] else 0
-        self.user[COUNTERS_KEY][VIDEO_VIEWS_COUNT_KEY] += video_views
+        self.user[COUNTERS_KEY][COUNT_KEY_VIDEO_VIEWS] += video_views
         return video_views
 
     @staticmethod
@@ -198,16 +222,19 @@ class InstaMeter:
         return response.read().decode('utf-8')
 
     def __analyze_top_liked_posts(self):
-        self.top_posts_liked = self.__sort_posts(LIKES_COUNT_KEY)
+        self.top_posts_liked = self.__sort_posts(COUNT_KEY_LIKES)
 
     def __analyze_top_commented_posts(self):
-        self.top_posts_commented = self.__sort_posts(COMMENTS_COUNT_KEY)
+        self.top_posts_commented = self.__sort_posts(COUNT_KEY_COMMENTS)
 
     def __analyze_top_viewed_posts(self):
-        self.top_posts_viewed = self.__sort_posts(VIDEO_VIEWS_COUNT_KEY)
+        self.top_posts_viewed = self.__sort_posts(COUNT_KEY_VIDEO_VIEWS)
 
     def __sort_posts(self, key):
-        tmp_posts = list(self.posts)
+        if key == COUNT_KEY_VIDEO_VIEWS:
+            tmp_posts = [el for el in self.posts if el['t'] == 'pvp']
+        else:
+            tmp_posts = list(self.posts)
         tmp_posts.sort(key=lambda post: post[key], reverse=True)
         posts = [post for post in tmp_posts if post[key] > 0][0:12]
         self.__send_success_callback('posts_top_{}'.format(key), posts, TOP_PROGRESS[key])
@@ -223,13 +250,13 @@ class InstaMeter:
         stats = {
             'following': self.user['f'],
             'followed': self.user['fb'],
-            'posts': self.user['p'],
-            'likes': self.user[COUNTERS_KEY][LIKES_COUNT_KEY],
-            'comments': self.user[COUNTERS_KEY][COMMENTS_COUNT_KEY],
-            'video views': self.user[COUNTERS_KEY][VIDEO_VIEWS_COUNT_KEY],
-            'likes/post': self.user[COUNTERS_KEY][LIKES_PER_POST_COUNT_KEY],
-            'comments/post': self.user[COUNTERS_KEY][COMMENTS_PER_POST_COUNT_KEY],
-            'views/post': self.user[COUNTERS_KEY][VIEWS_PER_POST_COUNT_KEY],
+            'posts': self.user[COUNTERS_KEY][COUNT_KEY_POSTS],
+            'likes': self.user[COUNTERS_KEY][COUNT_KEY_LIKES],
+            'comments': self.user[COUNTERS_KEY][COUNT_KEY_COMMENTS],
+            'video views': self.user[COUNTERS_KEY][COUNT_KEY_VIDEO_VIEWS],
+            'likes/post': self.user[COUNTERS_KEY][COUNT_KEY_LIKES_PER_POST],
+            'comments/post': self.user[COUNTERS_KEY][COUNT_KEY_COMMENTS_PER_POST],
+            'views/post': self.user[COUNTERS_KEY][COUNT_KEY_VIEWS_PER_POST],
         }
         print('+-- https://instagram.com/{:-<37}+'.format(self.user['un'] + '/ '))
         print('|   {:<27}|{:^31}|'.format('counter', 'value'))
@@ -246,20 +273,20 @@ class InstaMeter:
             self.__print_top_rest(posts, counter_text, key)
 
     def print_top_liked(self, count=10):
-        self.__print_top(self.top_posts_liked[0:count], 'top liked posts', LIKES_COUNT_KEY, 'likes')
+        self.__print_top(self.top_posts_liked[0:count], 'top liked posts', COUNT_KEY_LIKES, 'likes')
 
     def print_top_commented(self, count=10):
-        self.__print_top(self.top_posts_commented[0:count], 'top commented posts', COMMENTS_COUNT_KEY, 'comments')
+        self.__print_top(self.top_posts_commented[0:count], 'top commented posts', COUNT_KEY_COMMENTS, 'comments')
 
     def print_top_viewed(self, count=10):
-        self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', VIDEO_VIEWS_COUNT_KEY, 'views')
+        self.__print_top(self.top_posts_viewed[0:count], 'top viewed posts', COUNT_KEY_VIDEO_VIEWS, 'views')
 
     def __calculate_progress(self):
-        has_posts = self.user['p']
+        has_posts = self.user[COUNTERS_KEY][COUNT_KEY_POSTS]
         if self.user['ip']:
             return 100
         elif has_posts:
-            percent = self.posts.__len__() * 100 / float(self.user['p'])
+            percent = self.posts.__len__() * 100 / float(self.user[COUNTERS_KEY][COUNT_KEY_POSTS])
             return percent if percent < 81 else 80
         else:
             return 100
