@@ -68,8 +68,7 @@ class BaseProcessor:
         limits = self.db.get_like_limits_by_account()
         today_likes = limits[0]
         hours_left = limits[1]
-        hour_likes_by_activity = (self.hour_like_limit*24 - today_likes) // hours_left
-        print(limits, hour_likes_by_activity)
+        hour_likes_by_activity = (self.hour_like_limit * 24 - today_likes) // hours_left
         ll = None
         if self.hour_like_limit <= hour_likes_by_activity < self.hour_like_limit * 2:
             ll = hour_likes_by_activity

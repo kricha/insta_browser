@@ -17,7 +17,7 @@ def auth_with_cookies(browser, logger, login, cookie_path=tempfile.gettempdir())
     logger.save_screen_shot(browser, 'login.png')
     try:
         logger.log('Trying to auth with cookies.')
-        cookies = pickle.load(open(os.path.join(cookie_path, login+'.pkl'), "rb"))
+        cookies = pickle.load(open(os.path.join(cookie_path, login + '.pkl'), "rb"))
         for cookie in cookies:
             browser.add_cookie(cookie)
         browser.refresh()
