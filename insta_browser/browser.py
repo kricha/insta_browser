@@ -20,6 +20,7 @@ class Browser:
                  exclude=None):
         options = webdriver.ChromeOptions()
         options.add_argument('headless')
+        options.add_argument('--window-size=1024,900')
         self.browser = webdriver.Chrome(chrome_options=options)
         self.browser.implicitly_wait(10)
 
