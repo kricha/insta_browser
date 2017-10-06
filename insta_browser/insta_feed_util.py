@@ -106,7 +106,7 @@ class FeedProcessor(BaseProcessor):
                 else:
                     # like this post
                     time.sleep(.3)
-                    # heart.click()
+                    heart.click()
                     time.sleep(.7)
                     self.db.likes_increment()
                     self.post_liked += 1
