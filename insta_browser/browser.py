@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
-import time
 from .logger import Logger
-from .configure import *
 from .auth import *
 from .insta_not_feed_util import *
 from .insta_feed_util import *
@@ -14,15 +12,17 @@ class Browser:
     login = ''
     summary = {}
 
+    """
+    :param chrome: is deprecated and will be removed in future versions
+    """
+
     def __init__(self, debug=False, chrome=False, cookie_path=None, log_path=None, db_path=None,
                  exclude=None):
-        if chrome:
-            self.browser = webdriver.Chrome()
-        else:
-            self.browser = set_headers(webdriver)
-            self.browser.command_executor._commands['executePhantomScript'] = ('POST',
-                                                                               '/session/$sessionId/phantom/execute')
-            resource_requested_logic(self.browser)
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        self.browser = webdriver.Chrome(chrome_options=options)
+        self.browser.implicitly_wait(10)
+
         self.cookie_path = cookie_path
         self.exclude = exclude or []
         self.chrome = chrome
@@ -92,6 +92,6 @@ class Browser:
         self.get("https://instagram.com/")
         time.sleep(.5)
         processor = FeedProcessor(db=self.db, br=br, lg=self.logger)
-        processor.scroll_feed_to_last_not_liked_posts()
-        processor.process(self.exclude, self.login, count)
+        processor.scroll_feed_to_last_not_liked_posts(count)
+        processor.process(self.exclude, self.login)
         self.summary = processor.get_summary()
