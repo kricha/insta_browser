@@ -11,11 +11,8 @@ Requirements
 ------------
 
 -  Pyhton 2.7/3
--  You need to have PhantomJS or Chrome web driver for work. Download
-   and place binary from archive to bin folder:
-
-   -  `PhantomJS <http://phantomjs.org/download.html>`__
-   -  `Chrome <https://sites.google.com/a/chromium.org/chromedriver/downloads>`__
+-  `ChromeDriver <https://sites.google.com/a/chromium.org/chromedriver/downloads>`__
+   for headless web-surfing
 
 Examples
 --------
@@ -68,9 +65,7 @@ Examples
        from insta_browser import browser
 
        br = browser.Browser(
-           debug=True,
-           chrome=False,
-           cookie_path=os.path.join('var', 'cookies'),
+           debug=True,cookie_path=os.path.join('var', 'cookies'),
            log_path=os.path.join('var', 'logs'),
            db_path=os.path.join('var', 'db'),
            exclude=os.path.join('var', 'exclude.txt')
