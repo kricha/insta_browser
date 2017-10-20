@@ -87,9 +87,9 @@ class FeedProcessor(BaseProcessor):
             if filtered_posts.__len__():
                 real_post = filtered_posts.pop()
                 # scroll to real post in markup
-                self.browser.execute_script("return arguments[0].scrollIntoView();", real_post)
-                # getting need to process elements
                 heart = real_post.find_element_by_css_selector('div:nth-child(3) section a:first-child')
+                self.browser.execute_script("return arguments[0].scrollIntoView(false);", heart)
+                # getting need to process elements
                 author = real_post.find_element_by_css_selector('div:first-child .notranslate').text
                 heart_classes = heart.find_element_by_css_selector('span').get_attribute('class')
                 # check restrictions
