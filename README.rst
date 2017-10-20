@@ -21,11 +21,11 @@ Examples
 
    .. code:: python
 
-       from insta_browser import InstaMeter
-       im = InstaMeter(username='al_kricha')
-       im.analyze_profile()
+       from insta_browser import InstaMeter   
+       im = InstaMeter(username='al_kricha')   
+       im.analyze_profile()   
        im.print_account_statistic()
-       im.print_top_liked()
+       im.print_top_liked()   
 
    result:
 
@@ -79,7 +79,7 @@ Examples
            br.close_all()
 
 Other examples can be seen in my repository:
-`insta\_bot <https://github.com/aLkRicha/insta_bot>`__
+`insta_bot <https://github.com/aLkRicha/insta_bot>`__
 
 .. |Build Status| image:: https://travis-ci.org/aLkRicha/insta_browser.svg?branch=master
    :target: https://travis-ci.org/aLkRicha/insta_browser

@@ -1,19 +1,18 @@
 language: python
 python:
-    - 3.6
-    - 2.7
+- 3.6
+- 2.7
 addons:
   apt:
     packages:
     - pandoc
 deploy:
-    - provider: pypi
-      distributions: sdist bdist_wheel
-      user: "al_kricha"
-      password:
-          secure: "edny7dWsjPjnpRimULoFeallQXIowoEoIhw1QpbaK42yPg6AXBSfCrSHQolZrOHeqr4zSqcOmOHX+k2s4u3l1crAsZdo+DCdUuXMAfOKWGlRdslL6KXooYVdOTG7B3I50gu4WiYI8/fif0JdBTHOxHc5s3kY15exeRFLXeQhDeEaYt+CR3HO73kc0eE3rkIgL6gzmckLcFxoAciRlub6uZXonMzrAil9aXJ1C/qFHPWmy+NSKdgWOQAswjO/ojucHyRqBWbFNUK3UTOfrECEMdrv2j8bdbQberbP0yUF0Wg+xuCvYk8nE8uUf8Rj/VsizTrZ+jf1mVMcY7sBhqA0AW5I/3tpSAYkRjMk9CI3uoBdS852pAQo1sPo0arBC4n+af/w7gKYMVlDvLAgSEEDOdG2h/baud9EyjuIusNR2HNammwUIw2jorL3iuRN0m9tEqprgZX6lX1SZ6lEOuTNDJ5V5pEfBGS8EPbbdy0cpnGnGrrcRgL+It4YmxBoEpoiko/y5o6moX2bHASQtcib9RugF0ZheyH266ZzU9DIu6ilpxgq9jaILtDmFfiCUGkIsZ0QcwRgxOM8uezaIn7Cvp87dfHAwRiVH0EXNdsutITQsz/BfZEX6ARTWONQEciM/hidnl7CeDsDgWBV3/Ih1LnRT5qmg8C6L0deOMOw+5Q="
-      on:
-          branch: master
-          tags: true
-
+- provider: pypi
+  distributions: sdist bdist_wheel
+  user: al_kricha
+  password:
+    secure: g391dJv9Kzn6jS36jDRZCe9cA+mmpNB7fbQiZNUFb+T8ePEqp4peb63CWaqonv03t7OTNL+ShgpB14mFEN4/Vnp6W2yHuVke2wSzfzh0zormBxPBAEesST1AzhuwtgvyeBcRIM8C0b01iOIYLWQG99Q9/MqLIU7d/MGW82fEqnY68aElt2wAws2f+igp6q+lIwq+3JT7Rx0xPHrNblDQup7II2RZWb19Nw9rwuWu8M9xQXT9A84+NniPFwDdz9br8X6Ib+od/rJ/AqO5YnlvZo2PzkNICPA1Gq8IkpwfJb/HeCFFoi1qyzSX18ARxh+5plBinBWgIc8PXNA4FpiAm29tb0xCS4pDcTbHAQV6Vs9zqolCWVnN5NlrDqyeRnr2JjbeWdxnGeNewc1ifLcUpUa8Hrcb2dAA5iloc5ahoynGK5QaiAjCzElyYvXtkEkS5t0yU/9io0Y3Uz3/A4ure8Zl8SQTb/ka+7wm4/QcrwPeja3iU6Wf1H6zWIpnGbUK4267z8tai2NzhTErnbhvc7A1DsOBqwjKMLIy4pRJxu8ySFSkOzmHiH7wxRyepiCQrK5doLj1vL/PoMOvkrcFXSPcH+t/Za8e+2xE1b4JUSeht0zJFgmB3R6TJr54iNaAbKolwGma51sPkILIc0CnG0L/xy6a3bHn1/U9F2909s0=
+  on:
+    branch: master
+    tags: true
 script: nosetests

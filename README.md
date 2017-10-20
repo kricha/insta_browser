@@ -15,11 +15,11 @@
 ### Examples
 * Example of using package for getting account statistic:
     ```python
-    from insta_browser import InstaMeter
-    im = InstaMeter(username='al_kricha')
-    im.analyze_profile()
+    from insta_browser import InstaMeter   
+    im = InstaMeter(username='al_kricha')   
+    im.analyze_profile()   
     im.print_account_statistic()
-    im.print_top_liked()
+    im.print_top_liked()   
     ```
     result:
     ```commandline
@@ -54,21 +54,21 @@
     ```python
     import os
     from insta_browser import browser
-    
+
     br = browser.Browser(
         debug=True,cookie_path=os.path.join('var', 'cookies'),
         log_path=os.path.join('var', 'logs'),
         db_path=os.path.join('var', 'db'),
         exclude=os.path.join('var', 'exclude.txt')
     )
-    
+
     try:
         br.auth('YOUR_INSTA_LOGIN', 'YOUR_INSTA_PASSWORD')
         br.process_user('al_kricha')
         print(br.get_summary())
     finally:
         br.close_all()
-    
+
     ```
 
 Other examples can be seen in my repository: [insta_bot](https://github.com/aLkRicha/insta_bot)
