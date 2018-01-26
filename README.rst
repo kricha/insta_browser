@@ -29,7 +29,7 @@ Examples
 
    result:
 
-   .. code:: commandline
+   .. code:: bash
 
        +-- https://instagram.com/al_kricha/ --------------------------+
        |   counter                    |             value             |

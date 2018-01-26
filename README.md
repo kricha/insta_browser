@@ -25,7 +25,7 @@
 
     result:
     
-    ```commandline
+    ```bash
     +-- https://instagram.com/al_kricha/ --------------------------+
     |   counter                    |             value             |
     +------------------------------+-------------------------------+
