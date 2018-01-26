@@ -2,10 +2,7 @@ from setuptools import setup
 from insta_browser import version as v
 
 
-try:
-    description = open('README.rst').read()
-except (IOError, ImportError):
-    description = open('README.md').read()
+description = open('README.rst').read()
 
 version = v.__version__
 

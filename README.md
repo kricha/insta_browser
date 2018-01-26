@@ -14,6 +14,7 @@
 
 ### Examples
 * Example of using package for getting account statistic:
+
     ```python
     from insta_browser import InstaMeter   
     im = InstaMeter(username='al_kricha')   
@@ -21,7 +22,9 @@
     im.print_account_statistic()
     im.print_top_liked()   
     ```
+
     result:
+    
     ```commandline
     +-- https://instagram.com/al_kricha/ --------------------------+
     |   counter                    |             value             |
@@ -51,6 +54,7 @@
     ```
 
 * Example of using package for liking specific user:
+
     ```python
     import os
     from insta_browser import browser
