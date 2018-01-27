@@ -1,5 +1,13 @@
 import selenium.common.exceptions as excp
-import pprint
+
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
+
+import json
 
 
 class BaseProcessor:
@@ -63,6 +71,35 @@ class BaseProcessor:
             pass
 
         return False
+
+    def __follow_user(self):
+        if self.__do_i_need_to_follow_this_user() and self.__could_i_follow():
+            try:
+                follow_button = self.browser.find_element_by_css_selector('._iokts')
+                follow_button.click()
+                return True
+            except excp.NoSuchElementException:
+                self.logger.log('Cant find follow button.')
+
+        return False
+
+    def __could_i_follow(self):
+        counters = self.db.get_follow_limits_by_account()
+        return counters['daily'] < 1001 and counters['hourly'] < 76
+
+    def __do_i_need_to_follow_this_user(self):
+        try:
+            self.browser.find_element_by_css_selector('._jqf0k')
+            return False
+        except excp.NoSuchElementException:
+            username = self.browser.find_element_by_css_selector('._2g7d5').text()
+            user_link = 'https://www.instagram.com/{}/?__a=1'.format(username)
+            response = urlopen(user_link)
+            data = json.loads(response.read().decode('utf-8'))
+            followers = data['user']['followed_by']['count']
+            following = data['user']['follows']['count']
+            posts = data['user']['media']['count']
+            return posts > 10 and following < 500 and followers < 1000
 
     def get_like_limits(self, count=None):
         limits = self.db.get_like_limits_by_account()
