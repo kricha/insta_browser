@@ -44,7 +44,9 @@ class NotFeedProcessor(BaseProcessor):
         for i in progress:
             time.sleep(1)
             self.__like_post()
-            self.__follow_user()
+            if self.auto_follow:
+                self.__follow_user()
+                time.sleep(0.5)
             if not self.__go_to_next_post():
                 progress.close()
                 break

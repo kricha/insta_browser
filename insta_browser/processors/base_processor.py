@@ -1,4 +1,9 @@
 import selenium.common.exceptions as excp
+from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.remote.webelement import WebElement
+
+from insta_browser.db.browser_db import BrowserDB
+from ..logger import Logger
 
 try:
     # For Python 3.0 and later
@@ -25,9 +30,9 @@ class BaseProcessor:
     hour_like_limit = 150
 
     def __init__(self, db, br, lg):
-        self.db = db
-        self.browser = br
-        self.logger = lg
+        self.db: BrowserDB = db
+        self.browser: WebDriver = br
+        self.logger: Logger = lg
 
     def get_summary(self):
         return {'liked': self.post_liked,
@@ -37,11 +42,10 @@ class BaseProcessor:
                 'scrolled': self.feed_scrolled_down}
 
     @staticmethod
-    def _get_feed_post_link(post):
+    def _get_feed_post_link(post: WebElement):
         """
         Get link to post from post web-element from feed
-
-        :param post:
+        :param post: WebElement
         :return:
         """
         try:
@@ -51,12 +55,11 @@ class BaseProcessor:
         return post_link.get_attribute('href')
 
     @staticmethod
-    def _get_feed_post_media(post):  # TODO: refactor searching image
+    def _get_feed_post_media(post: WebElement):
         """
         Get link to post from post web-element from feed
-
-        :param post:
-        :return:
+        :param post: WebElement
+        :return: str
         """
         try:
             image = post.find_element_by_css_selector('div:nth-child(2) img')
@@ -72,22 +75,36 @@ class BaseProcessor:
 
         return False
 
-    def __follow_user(self):
+    def __follow_user(self) -> bool:
+        """
+        Follow user if need and could
+        :return: bool
+        """
         if self.__do_i_need_to_follow_this_user() and self.__could_i_follow():
             try:
                 follow_button = self.browser.find_element_by_css_selector('._iokts')
-                follow_button.click()
+                # follow_button.click()
+                self.logger.log('NEED TO FOLLOW!')
+                self.db.follows_increment()
                 return True
             except excp.NoSuchElementException:
                 self.logger.log('Cant find follow button.')
 
         return False
 
-    def __could_i_follow(self):
+    def __could_i_follow(self) -> bool:
+        """
+        Check if i could to follow more
+        :return: bool
+        """
         counters = self.db.get_follow_limits_by_account()
         return counters['daily'] < 1001 and counters['hourly'] < 76
 
-    def __do_i_need_to_follow_this_user(self):
+    def __do_i_need_to_follow_this_user(self) -> bool:
+        """
+        Check if i need to follow current user
+        :return: bool
+        """
         try:
             self.browser.find_element_by_css_selector('._jqf0k')
             return False
@@ -115,3 +132,12 @@ class BaseProcessor:
             ll = hour_likes_by_activity
         self.count = count if 0 < count < ll else ll
         return self.count
+
+    def set_auto_follow(self, flag: bool):
+        """
+        Enable or disable auto follow mode
+        :param flag:
+        :return:
+        """
+        self.auto_follow = flag
+        return self
