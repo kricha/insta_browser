@@ -2,8 +2,8 @@
 from selenium import webdriver
 from .logger import Logger
 from .auth import *
-from .insta_not_feed_util import *
-from .insta_feed_util import *
+from .processors.not_feed_processor import *
+from .processors.feed_processor import *
 from .db.browser_db import BrowserDB
 import re
 
@@ -17,7 +17,7 @@ class Browser:
     """
 
     def __init__(self, debug=False, chrome=False, cookie_path=None, log_path=None, db_path=None,
-                 exclude=None):
+                 exclude=None, auto_follow=False):
         options = webdriver.ChromeOptions()
         options.add_argument('headless')
         options.add_argument('--window-size=900,768')
@@ -29,6 +29,7 @@ class Browser:
         self.chrome = chrome
         self.logger = Logger(log_path, debug)
         self.db = BrowserDB(self.logger, db_path)
+        self.auto_follow = auto_follow
 
     def auth(self, login, password):
         if not login:
