@@ -75,7 +75,7 @@ class BaseProcessor:
 
         return False
 
-    def __follow_user(self) -> bool:
+    def follow_user(self) -> bool:
         """
         Follow user if need and could
         :return: bool
@@ -83,7 +83,7 @@ class BaseProcessor:
         if self.__do_i_need_to_follow_this_user() and self.__could_i_follow():
             try:
                 follow_button = self.browser.find_element_by_css_selector('._iokts')
-                # follow_button.click()
+                follow_button.click()
                 self.logger.log('NEED TO FOLLOW!')
                 self.db.follows_increment()
                 return True
@@ -109,7 +109,7 @@ class BaseProcessor:
             self.browser.find_element_by_css_selector('._jqf0k')
             return False
         except excp.NoSuchElementException:
-            username = self.browser.find_element_by_css_selector('._2g7d5').text()
+            username = self.browser.find_element_by_css_selector('._2g7d5').text
             user_link = 'https://www.instagram.com/{}/?__a=1'.format(username)
             response = urlopen(user_link)
             data = json.loads(response.read().decode('utf-8'))
@@ -118,6 +118,7 @@ class BaseProcessor:
             posts = data['user']['media']['count']
             return posts > 10 and following < 500 and followers < 1000
 
+    # TODO: refactor this
     def get_like_limits(self, count=None):
         limits = self.db.get_like_limits_by_account()
         today_likes = limits[0]
