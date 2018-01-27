@@ -71,8 +71,14 @@ class BrowserDB:
 
     def get_like_limits_by_account(self):
         cur = self.db.cursor()
-        row = cur.execute(SELECT_LIMITS_QUERY, [self.account_id]).fetchone()
+        row = cur.execute(SELECT_LIKE_LIMITS_QUERY, [self.account_id]).fetchone()
         return row
+
+    def get_follow_limits_by_account(self):
+        cur = self.db.cursor()
+        row1 = cur.execute(SELECT_FOLLOW_TODAYS_LIMITS_QUERY, [self.account_id]).fetchone()
+        row2 = cur.execute(SELECT_FOLLOW_HOURS_LIMITS_QUERY, [self.account_id]).fetchone()
+        return {'daily': row1[0], 'hourly': row2[0], 'hours_left': row1[1]}
 
     def likes_increment(self):
         params = [self.account_id]
@@ -80,10 +86,17 @@ class BrowserDB:
         self.db_log('query: {}, params: {}'.format(''.join(INSERT_UPDATE_LIKES_QUERY.splitlines()), params))
         self.db.commit()
 
+    def follows_increment(self):
+        params = [self.account_id]
+        self.db.execute(INSERT_UPDATE_FOLLOWS_QUERY, params)
+        self.db_log('query: {}, params: {}'.format(''.join(INSERT_UPDATE_FOLLOWS_QUERY.splitlines()), params))
+        self.db.commit()
+
     def db_log(self, text):
         self.logger.log_to_file('[SQLITE] {}'.format(text))
 
-SELECT_LIMITS_QUERY = '''
+
+SELECT_LIKE_LIMITS_QUERY = '''
 SELECT
   ifnull(sum(likes), 0)      AS `limit`,
   24 - strftime('%H', 'now') AS hours_left
@@ -92,13 +105,48 @@ WHERE account_id = ? AND
       datetime(date) BETWEEN datetime('now', 'start of day') AND datetime('now', 'start of day', '+1 day', '-1 second');
 '''
 
+SELECT_FOLLOW_TODAYS_LIMITS_QUERY = '''
+SELECT
+  ifnull(sum(follows), 0)      AS `limit`,
+  24 - strftime('%H', 'now') AS hours_left
+FROM activity
+WHERE account_id = ? AND
+      datetime(date) BETWEEN datetime('now', 'start of day') AND datetime('now', 'start of day', '+1 day', '-1 second');
+'''
+
+SELECT_FOLLOW_HOURS_LIMITS_QUERY = '''
+SELECT
+  ifnull(sum(follows), 0)      AS `follows_in_hour`
+FROM activity
+WHERE account_id = ? AND
+      datetime(date) BETWEEN (strftime('%Y-%m-%d %H', 'now') || ':00:00') AND (strftime('%Y-%m-%d %H', 'now') || ':59:59');
+'''
+
 INSERT_UPDATE_LIKES_QUERY = '''
-WITH new (account_id, likes, date) AS (VALUES (?, 1, strftime('%Y-%m-%d %H', 'now') || ':00:00'))
-INSERT OR REPLACE INTO activity (id, account_id, likes, date)
+WITH new (account_id, date) AS (VALUES (?, strftime('%Y-%m-%d %H', 'now') || ':00:00'))
+INSERT OR REPLACE INTO activity (id, account_id, likes, comments, follows, unfollows, date)
   SELECT
     a.id,
     n.account_id,
     ifnull(a.likes, 0) + 1,
+    ifnull(a.comments, 0),
+    ifnull(a.follows, 0),
+    ifnull(a.unfollows, 0),
+    n.date
+  FROM new n
+    LEFT JOIN activity a ON a.account_id = n.account_id AND a.date = n.date;
+'''
+
+INSERT_UPDATE_FOLLOWS_QUERY = '''
+WITH new (account_id, date) AS (VALUES (?, strftime('%Y-%m-%d %H', 'now') || ':00:00'))
+INSERT OR REPLACE INTO activity (id, account_id, likes, comments, follows, unfollows, date)
+  SELECT
+    a.id,
+    n.account_id,
+    ifnull(a.likes, 0),
+    ifnull(a.comments, 0),
+    ifnull(a.follows, 0) + 1,
+    ifnull(a.unfollows, 0),
     n.date
   FROM new n
     LEFT JOIN activity a ON a.account_id = n.account_id AND a.date = n.date;
