@@ -1,12 +1,11 @@
-import tqdm
-import time
-from selenium.webdriver.common.action_chains import ActionChains
 import selenium.common.exceptions as excp
-from .base.processor import BaseProcessor
+import time
+import tqdm
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import pprint
+from selenium.webdriver.support.ui import WebDriverWait
+
+from .base_processor import BaseProcessor
 
 NOT_LIKED_CSS_CLASS = '.coreSpriteHeartOpen'
 
