@@ -10,7 +10,7 @@ Instabrowser
 Requirements
 ------------
 
--  Pyhton 2.7/3
+-  Python 3
 -  `ChromeDriver <https://sites.google.com/a/chromium.org/chromedriver/downloads>`__
    for headless web-surfing
 

@@ -8,7 +8,7 @@
 📊 Get statistic of any public account.
 
 ### Requirements
-* Pyhton 2.7/3
+* Python 3
 * [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/downloads) for headless web-surfing
 
 
