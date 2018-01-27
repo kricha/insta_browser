@@ -1,9 +1,11 @@
-import tqdm
-import time
-from selenium.webdriver.common.action_chains import ActionChains
-import selenium.common.exceptions as excp
-from .base.processor import BaseProcessor
 import re
+
+import selenium.common.exceptions as excp
+import time
+import tqdm
+from selenium.webdriver.common.action_chains import ActionChains
+
+from .base_processor import BaseProcessor
 
 TOP_POSTS_XPATH = '//*[@id="react-root"]/section/main/article/div[1]/div'
 LATEST_POSTS_XPATH = '//*[@id="react-root"]/section/main/article/div[2]'
@@ -32,7 +34,7 @@ class NotFeedProcessor(BaseProcessor):
         self.get_like_limits(count)
         self.logger.log('Start processing latest posts.')
         self.__get_posts_block(LATEST_POSTS_XPATH)
-        self.go_through_posts(self.count-9)
+        self.go_through_posts(self.count - 9)
 
     def go_through_posts(self, count):
         self.count = count
@@ -42,6 +44,7 @@ class NotFeedProcessor(BaseProcessor):
         for i in progress:
             time.sleep(1)
             self.__like_post()
+            self.__follow_user()
             if not self.__go_to_next_post():
                 progress.close()
                 break
@@ -62,7 +65,7 @@ class NotFeedProcessor(BaseProcessor):
             time.sleep(0.5)
         elif not self.heart and self.count > 9:
             self.post_already_liked += 1
-            self.post_skipped +=1
+            self.post_skipped += 1
         else:
             self.post_skipped += 1
 
