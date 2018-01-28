@@ -87,7 +87,6 @@ class BaseProcessor:
                 try:
                     follow_button = self.browser.find_element_by_css_selector('._iokts')
                     follow_button.click()
-                    self.logger.log('NEED TO FOLLOW!')
                     self.db.follows_increment()
                     return True
                 except excp.NoSuchElementException:
