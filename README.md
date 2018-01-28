@@ -1,11 +1,11 @@
 # Instabrowser
 [![Build Status](https://travis-ci.org/aLkRicha/insta_browser.svg?branch=master)](https://travis-ci.org/aLkRicha/insta_browser)
 [![PyPI](https://img.shields.io/pypi/v/insta_browser.svg)](https://pypi.org/pypi/insta_browser)
-[![Code Climate](https://img.shields.io/codeclimate/github/aLkRicha/insta_browser.svg)](https://codeclimate.com/github/aLkRicha/insta_browser)
 
 💻 Library for instagram.com automation.  
 ♥️ Like instagram feed, username profile, location, tag.  
-📊 Get statistic of any public account.
+🤝 Auto-follow unknown users, during liking, from locations or tags.   
+📊 Get statistic of any public account.  
 
 ### Requirements
 * Python 3
@@ -63,7 +63,8 @@
         debug=True,cookie_path=os.path.join('var', 'cookies'),
         log_path=os.path.join('var', 'logs'),
         db_path=os.path.join('var', 'db'),
-        exclude=os.path.join('var', 'exclude.txt')
+        exclude=os.path.join('var', 'exclude.txt'),
+        auto_follow=True
     )
 
     try:

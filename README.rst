@@ -1,10 +1,11 @@
 Instabrowser
 ============
 
-|Build Status| |PyPI| |Code Climate|
+|Build Status| |PyPI|
 
 | 💻 Library for instagram.com automation.
 | ♥️ Like instagram feed, username profile, location, tag.
+| 🤝 Auto-follow unknown users, during liking, from locations or tags.
 | 📊 Get statistic of any public account.
 
 Requirements
@@ -68,7 +69,8 @@ Examples
            debug=True,cookie_path=os.path.join('var', 'cookies'),
            log_path=os.path.join('var', 'logs'),
            db_path=os.path.join('var', 'db'),
-           exclude=os.path.join('var', 'exclude.txt')
+           exclude=os.path.join('var', 'exclude.txt'),
+           auto_follow=True
        )
 
        try:
@@ -85,5 +87,3 @@ Other examples can be seen in my repository:
    :target: https://travis-ci.org/aLkRicha/insta_browser
 .. |PyPI| image:: https://img.shields.io/pypi/v/insta_browser.svg
    :target: https://pypi.org/pypi/insta_browser
-.. |Code Climate| image:: https://img.shields.io/codeclimate/github/aLkRicha/insta_browser.svg
-   :target: https://codeclimate.com/github/aLkRicha/insta_browser
