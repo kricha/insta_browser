@@ -108,6 +108,8 @@ class BaseProcessor:
         Check if i need to follow current user
         :return: bool
         """
+        self.browser.implicitly_wait(1)
+
         try:
             self.browser.find_element_by_css_selector('._jqf0k')
             return False
