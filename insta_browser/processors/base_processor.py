@@ -1,3 +1,4 @@
+import datetime
 import selenium.common.exceptions as excp
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
@@ -80,15 +81,17 @@ class BaseProcessor:
         Follow user if need and could
         :return: bool
         """
-        if self.__do_i_need_to_follow_this_user() and self.__could_i_follow():
-            try:
-                follow_button = self.browser.find_element_by_css_selector('._iokts')
-                follow_button.click()
-                self.logger.log('NEED TO FOLLOW!')
-                self.db.follows_increment()
-                return True
-            except excp.NoSuchElementException:
-                self.logger.log('Cant find follow button.')
+        if self.__could_i_follow():
+            # Second if, because we don't need to make http requests if user reaches follow limits
+            if self.__do_i_need_to_follow_this_user():
+                try:
+                    follow_button = self.browser.find_element_by_css_selector('._iokts')
+                    follow_button.click()
+                    self.logger.log('NEED TO FOLLOW!')
+                    self.db.follows_increment()
+                    return True
+                except excp.NoSuchElementException:
+                    self.logger.log('Cant find follow button.')
 
         return False
 
@@ -110,13 +113,30 @@ class BaseProcessor:
             return False
         except excp.NoSuchElementException:
             username = self.browser.find_element_by_css_selector('._2g7d5').text
-            user_link = 'https://www.instagram.com/{}/?__a=1'.format(username)
-            response = urlopen(user_link)
-            data = json.loads(response.read().decode('utf-8'))
-            followers = data['user']['followed_by']['count']
-            following = data['user']['follows']['count']
-            posts = data['user']['media']['count']
-            return posts > 10 and following < 500 and followers < 1000
+            counters = self.__get_counters(username)
+            if not counters:
+                user_link = 'https://www.instagram.com/{}/?__a=1'.format(username)
+                response = urlopen(user_link)
+                data = json.loads(response.read().decode('utf-8'))
+                counters['followers'] = data['user']['followed_by']['count']
+                counters['following'] = data['user']['follows']['count']
+                counters['posts'] = data['user']['media']['count']
+                need_to_be_followed = counters['posts'] > 10 and counters['following'] < 500 and counters[
+                    'followers'] < 1000
+                if not need_to_be_followed:
+                    self.db.store_user_counters(username, counters)
+                return need_to_be_followed
+            else:
+                return False
+
+    def __get_counters(self, login):
+        counters = self.db.get_user_counters(login)
+        today = datetime.date.today()
+        updated_at = datetime.datetime.strptime(counters['updated_at'], '%Y-%m-%d')
+        updated_at_date = datetime.date(year=updated_at.year, month=updated_at.month, day=updated_at.day)
+        if (today - updated_at_date).days > 31:
+            return {}
+        return counters['counters']
 
     # TODO: refactor this
     def get_like_limits(self, count=None):

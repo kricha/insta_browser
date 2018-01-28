@@ -1,9 +1,13 @@
 import os
-import sqlite3
 import tempfile
+
+import json
+import sqlite3
+from datetime import date
 
 
 class BrowserDB:
+    user_counters_table = 'tmp_counters'
     sql_path = os.path.dirname(os.path.abspath(__file__))
     account_id = None
 
@@ -48,7 +52,28 @@ class BrowserDB:
             db.cursor().executescript(create_sql)
             self.db_log('creating new db')
         else:
-            self.db_log('migrations will be provided in future.')
+            migration_path = os.path.join(self.sql_path, 'sql', 'migrations')
+            files = [f for f in os.listdir(migration_path) if
+                     os.path.isfile(os.path.join(migration_path, f)) and int(f.replace('.sql', '')) > int(version)]
+            files.sort(key=str.lower)
+            for file in files:
+                migration_sql = open(os.path.join(migration_path, file), 'r').read()
+                db.cursor().executescript(migration_sql)
+                self.db_log('migrate to {}'.format(file))
+                db.cursor().execute("UPDATE db_versions SET version={};".format(file.replace('.sql', '')))
+
+    def get_user_counters(self, login):
+        result = {'updated_at': date.today().strftime("%Y-%m-%d")}
+        query = 'SELECT * FROM {} WHERE login = {}'.format(self.user_counters_table, login)
+        row = self.db.cursor().execute(query).fetchone()
+        if row:
+            result = {'updated_at': row[1], 'counters': json.loads(row[2])}
+        return result
+
+    def store_user_counters(self, login, counters):
+        query = "REPLACE INTO {} (login, updated, counters) VALUES ({}, strftime('%Y-%m-%d', 'now'), {})".format(
+            self.user_counters_table, login, json.dump(counters))
+        self.db.cursor().execute(query)
 
     def detect_account(self, login):
         cur = self.db.cursor()
