@@ -52,16 +52,17 @@ class BrowserDB:
             create_sql = open(os.path.join(self.sql_path, 'sql', 'init.sql'), 'r').read()
             db.cursor().executescript(create_sql)
             self.db_log('creating new db')
-        else:
-            migration_path = os.path.join(self.sql_path, 'sql', 'migrations')
-            files = [f for f in os.listdir(migration_path) if
-                     os.path.isfile(os.path.join(migration_path, f)) and int(f.replace('.sql', '')) > version[0]]
-            files.sort(key=str.lower)
-            for file in files:
-                migration_sql = open(os.path.join(migration_path, file), 'r').read()
-                db.cursor().executescript(migration_sql)
-                self.db_log('migrate to {}'.format(file))
-                db.cursor().execute("UPDATE db_version SET version={};".format(file.replace('.sql', '')))
+            version = (0,)
+
+        migration_path = os.path.join(self.sql_path, 'sql', 'migrations')
+        files = [f for f in os.listdir(migration_path) if
+                 os.path.isfile(os.path.join(migration_path, f)) and int(f.replace('.sql', '')) > version[0]]
+        files.sort(key=str.lower)
+        for file in files:
+            migration_sql = open(os.path.join(migration_path, file), 'r').read()
+            db.cursor().executescript(migration_sql)
+            self.db_log('migrate to {}'.format(file))
+            db.cursor().execute("UPDATE db_version SET version={};".format(file.replace('.sql', '')))
 
     def get_user_counters(self, login):
         result = {'updated_at': (datetime.date.today() + datetime.timedelta(days=-40)).strftime("%Y-%m-%d")}
