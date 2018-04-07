@@ -29,6 +29,7 @@ setup(
     ],
     install_requires=[
         'selenium',
-        'tqdm'
+        'tqdm',
+        'requests'
     ],
 )
