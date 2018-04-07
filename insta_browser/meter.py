@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
 import re
+from urllib.parse import quote
 
-try:
-    import urllib.request as simple_browser
-except ImportError:
-    import urllib2 as simple_browser
+import requests
+
 from .configure import ua
-
-try:
-    from urllib import quote
-except ImportError:
-    from urllib.parse import quote
 
 COUNTERS_KEY = 'acc'
 COUNT_KEY_FOLLOWING = 'f'  # Following
@@ -35,8 +29,8 @@ POST_TYPES_KEYS = {
 
 
 class InstaMeter:
-    __profile_fp_url = 'https://www.instagram.com/{}/?__a=1'
-    __profile_rp_url = 'https://www.instagram.com/graphql/query/?query_id=17888483320059182&variables={}'
+    __profile_fp_url = 'https://instagram.com/{}/?__a=1'
+    __profile_rp_url = 'https://instagram.com/graphql/query/?query_hash=42323d64886122307be10013ad2dcc44&variables={}'
 
     def __init__(self, username, callback=None):
         self.username = username
@@ -49,6 +43,15 @@ class InstaMeter:
         self.top_posts_commented = []
         self.top_posts_viewed = []
         self.__error = None
+        self.client = requests.session()
+        self.headers = {
+            'User-Agent': ua,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'accept-language': 'ru,en-US;q=0.9,en;q=0.8',
+            'Cookie': 'ig_pr=2;',
+        }
+        self.client.headers.update(self.headers)
 
     def analyze_profile(self):
         try:
@@ -76,22 +79,20 @@ class InstaMeter:
 
     def __get_profile_first_posts(self):
         url = self.__profile_fp_url.format(self.username)
-        try:
-            data = json.loads(self.__process_url(url))
-        except simple_browser.HTTPError:
-            raise ValueError('User not found.')
+        data = self.client.request('get', url).json()
 
+        user_data = data['graphql']
         self.user['un'] = self.username
-        self.user['id'] = data['user']['id']
-        self.user['fn'] = data['user']['full_name']
-        self.user['b'] = data['user']['biography']
-        self.user['pic'] = data['user']['profile_pic_url_hd']
-        self.user['iv'] = data['user']['is_verified']
-        self.user['ip'] = data['user']['is_private']
+        self.user['id'] = user_data['user']['id']
+        self.user['fn'] = user_data['user']['full_name']
+        self.user['b'] = user_data['user']['biography']
+        self.user['pic'] = user_data['user']['profile_pic_url_hd']
+        self.user['iv'] = user_data['user']['is_verified']
+        self.user['ip'] = user_data['user']['is_private']
         self.user[COUNTERS_KEY] = {
-            COUNT_KEY_FOLLOWING: data['user']['follows']['count'],
-            COUNT_KEY_FOLLOWED_BY: data['user']['followed_by']['count'],
-            COUNT_KEY_POSTS: data['user']['media']['count'],
+            COUNT_KEY_FOLLOWING: user_data['user']['edge_follow']['count'],
+            COUNT_KEY_FOLLOWED_BY: user_data['user']['edge_followed_by']['count'],
+            COUNT_KEY_POSTS: user_data['user']['edge_owner_to_timeline_media']['count'],
             COUNT_KEY_IMAGE_POSTS: 0,
             COUNT_KEY_VIDEO_POSTS: 0,
             COUNT_KEY_ALBUM_POSTS: 0,
@@ -106,8 +107,8 @@ class InstaMeter:
         self.__send_success_callback('account', self.user)
 
         if not self.user['ip'] and self.user[COUNTERS_KEY][COUNT_KEY_POSTS]:
-            self.__process_posts_first(data['user']['media']['nodes'])
-            self.__tmp_req_info = data['user']['media']['page_info']
+            self.__process_posts_first(user_data['user']['edge_owner_to_timeline_media']['edges'])
+            self.__tmp_req_info = user_data['user']['edge_owner_to_timeline_media']['page_info']
 
     def __send_success_callback(self, key, data, progress=None):
         self.__use_callback({'data': {key: data}, '_id': self.user['id'],
@@ -120,10 +121,11 @@ class InstaMeter:
     def __process_posts_first(self, posts):
         posts_for_update = []
         for post in posts:
+            post = post['node']
             tmp_post = {
                 'id': post['id'],
-                'd': post['date'],
-                'code': post['code'],
+                'd': post['taken_at_timestamp'],
+                'code': post['shortcode'],
                 'iv': post['is_video'],
             }
             tmp_post.update(self.__update_user_and_post_counters(post))
@@ -195,7 +197,7 @@ class InstaMeter:
             var_json.update({'after': self.__tmp_req_info['end_cursor']})
         variable = json.dumps(var_json).replace(' ', '')
         url = self.__profile_rp_url.format(quote(variable))
-        data = json.loads(self.__process_url(url))
+        data = self.client.request('get', url).json()
         self.__tmp_data = data['data']['user']['edge_owner_to_timeline_media']['edges']
         self.__tmp_req_info = data['data']['user']['edge_owner_to_timeline_media']['page_info']
 
@@ -210,17 +212,17 @@ class InstaMeter:
         self.user[COUNTERS_KEY][COUNT_KEY_VIDEO_VIEWS] += video_views
         return video_views
 
-    @staticmethod
-    def __process_url(url):
-        headers = {
-            'User-Agent': ua,
-            'Accept': '*/*',
-            'Accept-Language': 'en-US',
-            'Connection': 'close',
-        }
-        request = simple_browser.Request(url, headers=headers)
-        response = simple_browser.urlopen(request)
-        return response.read().decode('utf-8')
+    # @staticmethod
+    # def __process_url(url):
+    #     headers = {
+    #         'User-Agent': ua,
+    #         'Accept': '*/*',
+    #         'Accept-Language': 'en-US',
+    #         'Connection': 'close',
+    #     }
+    #     request = simple_browser.Request(url, headers=headers)
+    #     response = simple_browser.urlopen(request)
+    #     return response.read().decode('utf-8')
 
     def __analyze_top_liked_posts(self):
         self.top_posts_liked = self.__sort_posts(COUNT_KEY_LIKES)
@@ -249,8 +251,8 @@ class InstaMeter:
     def print_account_statistic(self):
         self.__check_user_before_print()
         stats = {
-            'following': self.user['f'],
-            'followed': self.user['fb'],
+            'following': self.user['acc']['f'],
+            'followed': self.user['acc']['fb'],
             'posts': self.user[COUNTERS_KEY][COUNT_KEY_POSTS],
             'likes': self.user[COUNTERS_KEY][COUNT_KEY_LIKES],
             'comments': self.user[COUNTERS_KEY][COUNT_KEY_COMMENTS],

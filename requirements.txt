@@ -4,3 +4,4 @@ selenium
 wheel
 tqdm
 sphinx
+requests
