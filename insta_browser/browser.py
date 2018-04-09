@@ -67,6 +67,7 @@ class Browser:
         self.get("https://www.instagram.com/{}".format(username))
         self.logger.log("Start liking @{} profile {} posts".format(username, count))
         processor = NotFeedProcessor(db=self.db, br=br, lg=self.logger)
+        processor.set_auto_follow(self.auto_follow)
         processor.like_user_profile(count)
         self.summary = processor.get_summary()
 

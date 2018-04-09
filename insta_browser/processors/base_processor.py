@@ -23,6 +23,7 @@ class BaseProcessor:
     post_already_liked = 0
     post_excluded = 0
     post_skipped = 0
+    auto_follow = False
     like_limit = 416
     progress = None
     post_liked = 0
