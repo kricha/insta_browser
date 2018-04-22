@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import _md5
 import json
 import re
 from urllib.parse import quote
@@ -52,6 +53,10 @@ class InstaMeter:
             'Cookie': 'ig_pr=2;',
         }
         self.client.headers.update(self.headers)
+        m = re.search(r'"rhx_gis":"([A-z0-9]+)"', self.client.get('https://instagram.com/').text)
+        if m is None:
+            raise Exception("STOP!")
+        self.rhx_gis = m.group(1)
 
     def analyze_profile(self):
         try:
@@ -77,10 +82,14 @@ class InstaMeter:
             'top_posts_viewed': self.top_posts_viewed,
         }, ensure_ascii=False)
 
+    def __update_instagram_gis(self, params):
+        instagram_gis = _md5.md5('{}:{}'.format(self.rhx_gis, params).encode("utf-8")).hexdigest()
+        self.client.headers.update({'x-instagram-gis': instagram_gis})
+
     def __get_profile_first_posts(self):
         url = self.__profile_fp_url.format(self.username)
+        self.__update_instagram_gis('/{}/'.format(self.username))
         data = self.client.request('get', url).json()
-
         user_data = data['graphql']
         self.user['un'] = self.username
         self.user['id'] = user_data['user']['id']
@@ -190,13 +199,14 @@ class InstaMeter:
     def __request_for_rest_loop(self):
         var_json = {
             'id': self.user['id'],
-            'first': 500 if self.user[COUNTERS_KEY][COUNT_KEY_POSTS] > 500 else self.user[COUNTERS_KEY][
-                                                                                    COUNT_KEY_POSTS] - 12,
+            'first': 50 if self.user[COUNTERS_KEY][COUNT_KEY_POSTS] > 50 else self.user[COUNTERS_KEY][
+                                                                                  COUNT_KEY_POSTS] - 12,
         }
         if self.__tmp_req_info['has_next_page']:
             var_json.update({'after': self.__tmp_req_info['end_cursor']})
-        variable = json.dumps(var_json).replace(' ', '')
-        url = self.__profile_rp_url.format(quote(variable))
+        variables = json.dumps(var_json, separators=(',', ':'))
+        url = self.__profile_rp_url.format(quote(variables))
+        self.__update_instagram_gis(variables)
         data = self.client.request('get', url).json()
         self.__tmp_data = data['data']['user']['edge_owner_to_timeline_media']['edges']
         self.__tmp_req_info = data['data']['user']['edge_owner_to_timeline_media']['page_info']
