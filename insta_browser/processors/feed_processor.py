@@ -7,7 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from .base_processor import BaseProcessor
 
-NOT_LIKED_CSS_CLASS = '.coreSpriteHeartOpen'
+NOT_LIKED_CSS_CLASS = '.ptsdu'
 
 
 class FeedProcessor(BaseProcessor):
@@ -92,7 +92,7 @@ class FeedProcessor(BaseProcessor):
                 author = real_post.find_element_by_css_selector('div:first-child .notranslate').text
                 heart_classes = heart.find_element_by_css_selector('span').get_attribute('class')
                 # check restrictions
-                is_not_liked = 'coreSpriteHeartOpen' in heart_classes
+                is_not_liked = 'ptsdu' in heart_classes
                 is_mine = author == login
                 need_to_exclude = author in exclude
 

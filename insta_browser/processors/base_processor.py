@@ -86,7 +86,7 @@ class BaseProcessor:
             # Second if, because we don't need to make http requests if user reaches follow limits
             if self.__do_i_need_to_follow_this_user():
                 try:
-                    follow_button = self.browser.find_element_by_css_selector('._iokts')
+                    follow_button = self.browser.find_element_by_css_selector('._5f5mN')
                     follow_button.click()
                     self.db.follows_increment()
                     return True
@@ -111,10 +111,10 @@ class BaseProcessor:
         self.browser.implicitly_wait(1)
 
         try:
-            self.browser.find_element_by_css_selector('._jqf0k')
+            self.browser.find_element_by_css_selector('.qPANj')
             return False
         except excp.NoSuchElementException:
-            username = self.browser.find_element_by_css_selector('._2g7d5').text
+            username = self.browser.find_element_by_css_selector('.notranslate').text
             counters = self.__get_counters(username)
             if not counters:
                 user_link = 'https://www.instagram.com/{}/?__a=1'.format(username)

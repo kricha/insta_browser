@@ -97,7 +97,7 @@ class NotFeedProcessor(BaseProcessor):
         """
         self.heart = None
         try:
-            is_not_liked_span = self.browser.find_element_by_css_selector(".coreSpriteHeartOpen")
+            is_not_liked_span = self.browser.find_element_by_css_selector(".ptsdu")
             self.heart = is_not_liked_span.find_element_by_xpath('..')
             return True
         except excp.NoSuchElementException:
@@ -110,7 +110,7 @@ class NotFeedProcessor(BaseProcessor):
         :return: next link WebElement if exist and False if not
         """
         try:
-            next_link = self.browser.find_element_by_css_selector(".coreSpriteRightPaginationArrow")
+            next_link = self.browser.find_element_by_css_selector(".HBoOv._1bdSS")
             return next_link
         except excp.NoSuchElementException:
             return False
