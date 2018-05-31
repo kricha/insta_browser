@@ -277,7 +277,7 @@ class InstaMeter:
         for key, value in stats.items():
             print('|   {:<27}|{:^31}|'.format(key, value))
         print('|{: ^62}|'.format(''))
-        print('+{:-^62}+'.format(' https://github.com/aLkRicha/insta_browser '))
+        print('+{:-^62}+'.format(' https://github.com/kricha/insta_browser '))
 
     def __print_top(self, posts, header_text, key, counter_text):
         self.__check_user_before_print()

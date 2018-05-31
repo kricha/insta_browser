@@ -56,7 +56,7 @@ def auth_with_credentials(browser, logger, login, password, cookie_path=tempfile
 
 def check_if_user_authenticated(browser):
     try:
-        browser.find_element_by_css_selector(".coreSpriteDesktopNavProfile")
+        browser.find_element_by_css_selector(".logged-in")
         return True
     except excp.NoSuchElementException:
         return False

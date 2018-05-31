@@ -1,5 +1,5 @@
 # Instabrowser
-[![Build Status](https://travis-ci.org/aLkRicha/insta_browser.svg?branch=master)](https://travis-ci.org/aLkRicha/insta_browser)
+[![Build Status](https://travis-ci.org/kricha/insta_browser.svg?branch=master)](https://travis-ci.org/kricha/insta_browser)
 [![PyPI](https://img.shields.io/pypi/v/insta_browser.svg)](https://pypi.org/pypi/insta_browser)
 
 💻 Library for instagram.com automation.  
@@ -36,7 +36,7 @@
     |   following                  |              211              |
     |   video views                |             6138              |
     |                                                              |
-    +--------- https://github.com/aLkRicha/insta_browser ----------+
+    +--------- https://github.com/kricha/insta_browser ----------+
     +--------------------------------------------------------------+
     |                       top liked posts                        |
     +--------------------------------------------------------------+
@@ -76,4 +76,4 @@
 
     ```
 
-Other examples can be seen in my repository: [insta_bot](https://github.com/aLkRicha/insta_bot)
+Other examples can be seen in my repository: [insta_bot](https://github.com/kricha/insta_bot)
