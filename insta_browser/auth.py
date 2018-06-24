@@ -4,6 +4,8 @@ import tempfile
 import os
 import selenium.common.exceptions as excp
 
+LOGIN_URL = 'https://instagram.com/accounts/login/'
+
 
 def auth_with_cookies(browser, logger, login, cookie_path=tempfile.gettempdir()):
     """
@@ -32,6 +34,9 @@ def auth_with_cookies(browser, logger, login, cookie_path=tempfile.gettempdir())
 
 
 def auth_with_credentials(browser, logger, login, password, cookie_path=tempfile.gettempdir()):
+    if browser.current_url != LOGIN_URL:
+        browser.get(LOGIN_URL)
+    time.sleep(2)
     logger.log('Trying to auth with credentials.')
     login_field = browser.find_element_by_name("username")
     login_field.clear()
